@@ -10,16 +10,20 @@ public class Water : Block
     {
         Block block = gameObject.GetComponent<Block>();
 
-        switch (block.id)
+        if(block.id == 100)
         {
-
-            case 39:
-                StartCoroutine(AnimateSink(gameObject.transform, () => ReplaceBlock(gameObject, callback)));
-                break;
-
-            case 100:
-                StartCoroutine(AnimateSink(gameObject.transform, () => Debug.Log("Game over")));
-                break;
+            StartCoroutine(AnimateSink(gameObject.transform, () => Debug.Log("Game over")));
+        }
+        else if (block.id == 39)
+        {
+            StartCoroutine(AnimateSink(gameObject.transform, () => ReplaceBlock(gameObject, callback)));
+        }
+        else
+        {
+            StartCoroutine(AnimateSink(gameObject.transform, () => {
+                Destroy(gameObject);
+                callback();
+            }));
         }
 
         return true;

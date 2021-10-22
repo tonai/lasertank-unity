@@ -24,6 +24,8 @@ public class BoardManager : MonoBehaviour
 
         // Objects
         InitLevel(board.objects, true, 1);
+
+        // DebugHelper.DumpToConsole(board.ground);
     }
 
     public Board GetBoard()

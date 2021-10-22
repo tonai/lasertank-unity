@@ -9,7 +9,7 @@ public enum Direction
     West, // Z negative
 }
 
-static class DirectionHelper
+static public class DirectionHelper
 {
     static public Direction GetClockwiseDirection(Direction direction)
     {

@@ -9,7 +9,10 @@ public class Row
 
     public GameObject GetBlock(int index)
     {
-        return blocks[index];
+        if (blocks != null) {
+            return blocks[index];
+        }
+        return null;
     }
     
     public void SetInstance(GameObject block, int index)

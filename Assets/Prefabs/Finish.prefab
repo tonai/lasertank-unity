@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2268560719837177465}
   - component: {fileID: 1473350261997712528}
   - component: {fileID: 3559409184813320671}
-  - component: {fileID: 8562479047044492141}
+  - component: {fileID: 433823648}
   m_Layer: 0
   m_Name: Finish
   m_TagString: Player
@@ -96,7 +96,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8562479047044492141
+--- !u!114 &433823648
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -105,7 +105,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 659998638888809976}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7270a3dde9436864183c67193241d9cd, type: 3}
+  m_Script: {fileID: 11500000, guid: 17374d1fe2f812c438807dab9f3ee495, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   id: 1
@@ -113,7 +113,6 @@ MonoBehaviour:
   canMoveThrough: 0
   canShootThrough: 0
   direction: 0
-  hasRotatedVariants: 0
   rotationOffset: 0
   xOffset: 0
   yOffset: 0
