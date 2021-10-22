@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class BoardManager : MonoBehaviour
 {
@@ -20,10 +20,10 @@ public class BoardManager : MonoBehaviour
         InitDictionary();
 
         // Ground
-        InitLevel(board.ground, board.SetGroundInstance, 0);
+        InitLevel(board.ground, false, 0);
 
         // Objects
-        InitLevel(board.objects, board.SetObjectInstance, 1);
+        InitLevel(board.objects, true, 1);
     }
 
     public Board GetBoard()
@@ -53,7 +53,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private void InitLevel(Row[] rows, Action<GameObject, int, int> SetBoardInstance, int level)
+    private void InitLevel(Row[] rows, bool isObject, int level)
     {
         for (int i = 0; i < rows.Length; i++)
         {
@@ -70,9 +70,16 @@ public class BoardManager : MonoBehaviour
 
                         if (block != null)
                         {
-                            float y = level * tileSize + block.yOffset;
-                            GameObject instance = InitBlock(prefab, i, y, j);
-                            SetBoardInstance(instance, i, j);
+                            Vector3 position = new Vector3(i * tileSize + block.xOffset, level * tileSize + block.yOffset, j * tileSize + block.zOffset);
+                            GameObject instance = InitBlock(prefab, i, j, position, isObject);
+
+                            if (isObject) {
+                                board.SetObjectInstance(instance, i, j);
+                            }
+                            else
+                            {
+                                board.SetGroundInstance(instance, i, j);
+                            }
 
                             if (id == 100)
                             {
@@ -85,15 +92,16 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private GameObject InitBlock(GameObject prefab, int x, float y, int z)
+    private GameObject InitBlock(GameObject prefab, int x, int z, Vector3 position,  bool isObject)
     {
-        GameObject instance = Instantiate(prefab, new Vector3(x * tileSize, y, z * tileSize), Quaternion.identity);
+        GameObject instance = Instantiate(prefab, position, Quaternion.identity);
         instance.SetActive(true);
         Block block = instance.GetComponent<Block>();
 
         if (block != null)
         {
             block.SetPosition(x, z);
+            block.SetIsObject(isObject);
         }
         return instance;
     }

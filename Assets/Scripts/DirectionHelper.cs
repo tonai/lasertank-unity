@@ -1,3 +1,6 @@
+using System;
+using UnityEngine;
+
 public enum Direction
 {
     North, // X positive
@@ -88,5 +91,95 @@ static class DirectionHelper
             return -180f;
         }
         return 180f;
+    }
+
+    static public Direction GetDirection(float rotation)
+    {
+        switch (rotation % 360)
+        {
+            case 0:
+                return Direction.South;
+
+            case 180:
+                return Direction.North;
+
+            case 90:
+                return Direction.West;
+
+            case 270:
+                return Direction.Est;
+
+            default:
+                return Direction.North; // This should never happen
+        }
+    }
+
+    static public Vector2Int GetDirectionPosition(Vector2Int position, Direction direction)
+    {
+        Vector2Int nextPosition = new Vector2Int(position.x, position.y);
+
+        switch (direction)
+        {
+            case Direction.North:
+                nextPosition.x += 1;
+                break;
+
+            case Direction.South:
+                nextPosition.x -= 1;
+                break;
+
+            case Direction.Est:
+                nextPosition.y -= 1;
+                break;
+
+            case Direction.West:
+                nextPosition.y += 1;
+                break;
+        }
+
+        return nextPosition;
+
+    }
+
+    static public Vector3 GetShootHitPosition(Vector2Int position, Direction direction, float y, float tileSize)
+    {
+        switch (direction)
+        {
+            case Direction.North:
+                return new Vector3((position.x + 0.5f) * tileSize, y, position.y * tileSize);
+
+            case Direction.South:
+                return new Vector3((position.x - 0.5f) * tileSize, y, position.y * tileSize);
+
+            case Direction.Est:
+                return new Vector3(position.x * tileSize, y, (position.y - 0.5f) * tileSize);
+
+            case Direction.West:
+                return new Vector3(position.x * tileSize, y, (position.y + 0.5f) * tileSize);
+
+            default:
+                return new Vector3(position.x * tileSize, y, position.y * tileSize); // This should never happen
+        }
+    }
+
+    static public Vector2Int GetNextPosition(Vector2Int position, Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.North:
+                return position + new Vector2Int(1, 0);
+
+            case Direction.South:
+                return position + new Vector2Int(-1, 0);
+
+            case Direction.Est:
+                return position + new Vector2Int(0, -1);
+
+            case Direction.West:
+                return position + new Vector2Int(0, 1);
+
+            default:
+                return position; // This should never happen
+        }
     }
 }

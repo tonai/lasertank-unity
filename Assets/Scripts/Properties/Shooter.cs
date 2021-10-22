@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,12 +7,15 @@ public class Shooter : MonoBehaviour
 {
     public GameObject canon;
     public GameObject laserPrefab;
-    public float speed;
+    public float speed = 10f;
 
     private BoardManager boardManager;
-    private bool shooting = false;
-    private List<Vector3> trajectoryList;
     private float canonYOffset;
+    private Block hitBlock;
+    private Direction hitDirection;
+    private bool isShooting = false;
+    private GameObject laser;
+    private List<Vector3> trajectoryList;
 
     public void Start()
     {
@@ -25,26 +29,32 @@ public class Shooter : MonoBehaviour
 
     public bool IsShooting()
     {
-        return shooting;
+        return isShooting;
     }
 
-    public void Shoot(Vector2Int position, Direction direction)
+    public void SetIsShooting(bool isShooting)
     {
-        shooting = true;
+        this.isShooting = isShooting;
+    }
+
+    public void Shoot(Vector2Int position, Direction direction, Action callback = null)
+    {
+        isShooting = true;
         trajectoryList = new List<Vector3>();
         canonYOffset = canon.transform.position.y;
         trajectoryList.Add(canon.transform.position);
 
-        Vector2Int nextPosition = GetNextPosition(position, direction);
+        Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
         CheckNextPosition(nextPosition, direction);
-        StartCoroutine(AnimateLine());
+        StartCoroutine(AnimateLine(callback != null ? callback : EndShootCallback));
     }
 
-    private IEnumerator AnimateLine()
+    private IEnumerator AnimateLine(Action callback)
     {
-        GameObject laser = Instantiate(laserPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+        laser = Instantiate(laserPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         LineRenderer line = laser.GetComponent<LineRenderer>();
         int pointsCount = trajectoryList.Count;
+        line.positionCount = pointsCount;
         laser.SetActive(true);
 
         for (int i = 0; i < pointsCount - 1; i++)
@@ -53,7 +63,8 @@ public class Shooter : MonoBehaviour
             Vector3 startPosition = trajectoryList[i];
             Vector3 endPosition = trajectoryList[i + 1];
             Vector3 pos = startPosition;
-            float segmentDuration = Vector3.Distance(startPosition, endPosition) / speed;
+            float distance = Vector3.Distance(startPosition, endPosition);
+            float segmentDuration = distance / speed;
             line.SetPosition(i, startPosition);
 
             while (pos != endPosition)
@@ -62,16 +73,16 @@ public class Shooter : MonoBehaviour
                 pos = Vector3.Lerp(startPosition, endPosition, t);
                 line.SetPosition(i + 1, pos);
 
-                /*for (int j = i + 1; j < pointsCount; j++)
+                for (int j = i + 1; j < pointsCount; j++)
                 {
                     line.SetPosition(j, pos);
-                }*/
+                }
 
                 yield return null;
             }
         }
 
-        EndShoot(laser);
+        EndShoot(callback);
     }
 
     private void CheckNextPosition(Vector2Int position, Direction direction)
@@ -88,70 +99,34 @@ public class Shooter : MonoBehaviour
             {
                 Block objectBlock = objectObject.GetComponent<Block>();
 
-                if (objectBlock != null && !objectBlock.canShootThrough)
+                if (objectBlock != null)
                 {
-                    continueShooting = false;
+                    hitBlock = objectBlock;
+                    hitDirection = direction;
+                    Vector3 trajectoryPosition = objectBlock.GetShootHitPosition(canonYOffset, ref direction, ref continueShooting);
+                    trajectoryList.Add(trajectoryPosition);
                 }
             }
         }
 
         if (continueShooting)
         {
-            Vector2Int nextPosition = GetNextPosition(position, direction);
+            Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
             CheckNextPosition(nextPosition, direction);
         }
-        else
+    }
+
+    private void EndShoot(Action callback)
+    {
+        if (!hitBlock || !hitBlock.ShootThrough(gameObject, hitDirection, callback))
         {
-            Vector3 trajectoryPosition = GetTrajectoryPosition(position, DirectionHelper.GetOppositeDirection(direction), canonYOffset);
-            trajectoryList.Add(trajectoryPosition);
+            callback();
         }
     }
 
-    private void EndShoot(GameObject laser)
+    private void EndShootCallback()
     {
         Destroy(laser);
-        shooting = false;
-    }
-
-    private Vector2Int GetNextPosition(Vector2Int position, Direction direction)
-    {
-        switch (direction)
-        {
-            case Direction.North:
-                return position + new Vector2Int(1, 0);
-
-            case Direction.South:
-                return position + new Vector2Int(-1, 0);
-
-            case Direction.Est:
-                return position + new Vector2Int(0, -1);
-
-            case Direction.West:
-                return position + new Vector2Int(0, 1);
-
-            default:
-                return position; // This should never happen
-        }
-    }
-
-    private Vector3 GetTrajectoryPosition(Vector2Int position, Direction direction, float y)
-    {
-        switch (direction)
-        {
-            case Direction.North:
-                return new Vector3((position.x + 0.5f) * boardManager.tileSize, y, position.y * boardManager.tileSize);
-
-            case Direction.South:
-                return new Vector3((position.x - 0.5f) * boardManager.tileSize, y, position.y * boardManager.tileSize);
-
-            case Direction.Est:
-                return new Vector3(position.x * boardManager.tileSize, y, (position.y - 0.5f) * boardManager.tileSize);
-
-            case Direction.West:
-                return new Vector3(position.x * boardManager.tileSize, y, (position.y + 0.5f) * boardManager.tileSize);
-
-            default:
-                return new Vector3(position.x * boardManager.tileSize, y, position.y * boardManager.tileSize); // This should never happen
-        }
+        isShooting = false;
     }
 }

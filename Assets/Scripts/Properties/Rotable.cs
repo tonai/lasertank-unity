@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class Rotable : MonoBehaviour
@@ -6,16 +7,14 @@ public class Rotable : MonoBehaviour
     public float speed = 5f;
 
     private Block block;
-    private bool isKeyDown = false;
-    private Direction? nextDirection = null;
-    private float? nextRotation = null;
+    private bool isRotating = false;
 
     public void Start()
     {
         block = GetComponent<Block>();
     }
 
-    public void Update()
+    /*public void Update()
     {
         if (nextRotation != null)
         {
@@ -46,42 +45,49 @@ public class Rotable : MonoBehaviour
                 transform.rotation = rotation;
             }
         }
-    }
+    }*/
 
     public bool IsRotating()
     {
-        return nextRotation != null;
+        return isRotating;
     }
 
-    public void Rotate(float rotation)
+    public void Rotate(float rotation, Action callback = null)
     {
-        nextRotation = (float)Math.Round(transform.rotation.eulerAngles.y) + rotation;
-        Direction direction = block.GetDirection();
-        Debug.Log(nextRotation);
-
-        if (rotation == 90f)
-        {
-            nextDirection = DirectionHelper.GetClockwiseDirection(direction);
-        }
-        else if(rotation == -90f)
-        {
-            nextDirection = DirectionHelper.GetCounterClockwiseDirection(direction);
-        }
-        else
-        {
-            nextDirection = DirectionHelper.GetOppositeDirection(direction);
-        }
+        float nextRotation = (float)Math.Round(transform.rotation.eulerAngles.y) + rotation;
+        StartCoroutine(AnimateRotation(nextRotation, callback != null ? callback : EndRotationCallback));
     }
 
-    public void SetKeyDown(bool isKeyDown)
+    private IEnumerator AnimateRotation(float nextRotation, Action callback)
     {
-        this.isKeyDown = isKeyDown;
+        isRotating = true;
+        float startPosition = transform.rotation.eulerAngles.y;
+        float endPosition = nextRotation;
+        float newPosition = startPosition;
+        float startTime = Time.time;
+        float distance = Math.Abs(nextRotation - startPosition);
+        float duration = distance / speed;
+
+        while (newPosition != endPosition)
+        {
+            float t = (Time.time - startTime) / duration;
+            newPosition = Mathf.Lerp(startPosition, endPosition, t);
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, newPosition, transform.rotation.eulerAngles.z);
+            yield return null;
+        }
+
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, endPosition, transform.rotation.eulerAngles.z);
+        EndRotation(DirectionHelper.GetDirection(nextRotation + block.rotationOffset), callback);
     }
 
-    private void EndRotation()
+    private void EndRotation(Direction newDirection, Action callback)
     {
-        block.SetDirection((Direction)nextDirection);
-        nextDirection = null;
-        nextRotation = null;
+        block.direction = newDirection;
+        callback();
+    }
+
+    private void EndRotationCallback()
+    {
+        isRotating = false;
     }
 }

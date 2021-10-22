@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 4460094267825219607}
   - component: {fileID: 7481030588531912460}
   - component: {fileID: 3079202821519237909}
-  - component: {fileID: 3103800135100831557}
+  - component: {fileID: 8565978191632686915}
+  - component: {fileID: 8371483962444078723}
   m_Layer: 0
   m_Name: MovableBlock
   m_TagString: Untagged
@@ -96,7 +97,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3103800135100831557
+--- !u!114 &8565978191632686915
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -105,8 +106,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 8420887209756946005}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7270a3dde9436864183c67193241d9cd, type: 3}
+  m_Script: {fileID: 11500000, guid: cd642f0c933e89e47829f6935c656be0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   id: 39
   canMoveOver: 1
+  canMoveThrough: 0
+  canShootThrough: 0
+  direction: 0
+  hasRotatedVariants: 0
+  rotationOffset: 0
+  xOffset: 0
+  yOffset: 0
+  zOffset: 0
+--- !u!114 &8371483962444078723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8420887209756946005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cc81541bf8480340a304eae13c19c6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 4

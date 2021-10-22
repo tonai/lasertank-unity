@@ -11,7 +11,7 @@ public class FollowCamera : MonoBehaviour
         if (player != null)
         {
             Vector3 position = player.transform.position;
-            Vector3 targetPosition = new Vector3(position.x - 3, 4, position.z + 3);
+            Vector3 targetPosition = new Vector3(position.x, 10, position.z);
             float distance = Vector3.Distance(transform.position, targetPosition);
 
             if (distance > 0)
@@ -35,10 +35,10 @@ public class FollowCamera : MonoBehaviour
         this.player = player;
 
         Vector3 position = player.transform.position;
-        transform.position = new Vector3(position.x - 3, 4, position.z + 3);
+        transform.position = new Vector3(position.x, 10, position.z);
 
         Quaternion rotation = new Quaternion();
-        rotation.eulerAngles = new Vector3(45, 135, 0);
+        rotation.eulerAngles = new Vector3(90, 90, 0);
         transform.rotation = rotation;
     }
 }

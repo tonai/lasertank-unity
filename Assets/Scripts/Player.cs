@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -26,14 +28,12 @@ public class Player : MonoBehaviour
     {
         Direction? targetDirection = null;
         bool canPerformAction = !movable.IsMoving() && !rotable.IsRotating() && !shooter.IsShooting();
-        bool isKeyPressed = false;
 
-        if (Input.GetKey(shoot))
+        if (Input.GetKeyDown(shoot))
         {
-            isKeyPressed = true;
             if (canPerformAction)
             {
-                Direction direction = block.GetDirection();
+                Direction direction = block.direction;
                 shooter.Shoot(block.GetPosition(), direction);
                 return;
             }
@@ -41,22 +41,18 @@ public class Player : MonoBehaviour
 
         if (Input.GetKey(forward))
         {
-            isKeyPressed = true;
             targetDirection = Direction.North;
         }
         if (Input.GetKey(backward))
         {
-            isKeyPressed = true;
             targetDirection = Direction.South;
         }
         if (Input.GetKey(right))
         {
-            isKeyPressed = true;
             targetDirection = Direction.Est;
         }
         if (Input.GetKey(left))
         {
-            isKeyPressed = true;
             targetDirection = Direction.West;
         }
 
@@ -68,19 +64,14 @@ public class Player : MonoBehaviour
             }
             else
             {
-                HandleArrowDirectionMovement((Direction)targetDirection);
+                HandleRelativeMovement((Direction)targetDirection);
             }
         }
-
-        movable.SetKeyDown(isKeyPressed);
-        rotable.SetKeyDown(isKeyPressed);
-        // movable.SetKeyDown(relativeTargetDirection == Direction.North || relativeTargetDirection == Direction.South);
-        // rotable.SetKeyDown(relativeTargetDirection == Direction.Est || relativeTargetDirection == Direction.West);
     }
 
-    private void HandleArrowDirectionMovement(Direction targetDirection)
+    private void HandleRelativeMovement(Direction targetDirection)
     {
-        Direction direction = block.GetDirection();
+        Direction direction = block.direction;
 
         switch (targetDirection)
         {
@@ -105,7 +96,7 @@ public class Player : MonoBehaviour
 
     private void HandleCardinalPointsMovement(Direction targetDirection)
     {
-        Direction direction = block.GetDirection();
+        Direction direction = block.direction;
 
         if (direction == targetDirection)
         {

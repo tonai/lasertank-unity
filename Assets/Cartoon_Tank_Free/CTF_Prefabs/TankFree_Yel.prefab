@@ -184,7 +184,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cc81541bf8480340a304eae13c19c6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
+  speed: 4
 --- !u!114 &120862988
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,9 +200,12 @@ MonoBehaviour:
   id: 100
   canMoveOver: 0
   canMoveThrough: 0
-  yOffset: -0.265
+  canShootThrough: 0
+  hasRotatedVariants: 0
   rotationOffset: 90
-  _canShootThrough: 0
+  xOffset: 0
+  yOffset: -0.265
+  zOffset: 0
 --- !u!114 &7930768063140172020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -233,7 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b005ea6c9cf989b40a6e622435d10cb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
+  speed: 360
 --- !u!114 &1453792786044999346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -248,7 +251,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canon: {fileID: 1641193759526630708}
   laserPrefab: {fileID: 0}
-  speed: 20
+  speed: 10
 --- !u!1 &1641193759526630708
 GameObject:
   m_ObjectHideFlags: 0

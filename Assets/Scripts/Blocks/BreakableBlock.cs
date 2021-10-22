@@ -1,16 +1,12 @@
+using System;
 using UnityEngine;
 
 public class BreakableBlock : Block
 {
-    public override bool canShootThrough
+    public override bool ShootThrough(GameObject gameObject, Direction direction, Action callback)
     {
-        get {
-            Destroy(this.gameObject);
-            return false;
-        }
-        set
-        {
-            _canShootThrough = value;
-        }
+        Destroy(this.gameObject);
+        callback();
+        return true;
     }
 }

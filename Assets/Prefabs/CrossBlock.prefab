@@ -111,5 +111,10 @@ MonoBehaviour:
   id: 28
   canMoveOver: 1
   canMoveThrough: 0
-  yOffset: 0
+  canShootThrough: 1
+  direction: 0
+  hasRotatedVariants: 0
   rotationOffset: 0
+  xOffset: 0
+  yOffset: 0
+  zOffset: 0
