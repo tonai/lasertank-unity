@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Rotable : MonoBehaviour
 {
-    public float speed = 5f;
+    public float speed = 360f;
 
     private Block block;
     private bool isRotating = false;
@@ -77,7 +77,7 @@ public class Rotable : MonoBehaviour
         }
 
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, endPosition, transform.rotation.eulerAngles.z);
-        EndRotation(DirectionHelper.GetDirection(nextRotation + block.rotationOffset), callback);
+        EndRotation(DirectionHelper.GetDirection(nextRotation - block.rotationOffset), callback);
     }
 
     private void EndRotation(Direction newDirection, Action callback)

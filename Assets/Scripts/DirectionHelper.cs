@@ -95,19 +95,24 @@ static class DirectionHelper
 
     static public Direction GetDirection(float rotation)
     {
-        switch (rotation % 360)
+        rotation = rotation % 360;
+        if (rotation < 0)
+        {
+            rotation += 360;
+        }
+        switch (rotation)
         {
             case 0:
-                return Direction.South;
-
-            case 180:
                 return Direction.North;
 
+            case 180:
+                return Direction.South;
+
             case 90:
-                return Direction.West;
+                return Direction.Est;
 
             case 270:
-                return Direction.Est;
+                return Direction.West;
 
             default:
                 return Direction.North; // This should never happen
