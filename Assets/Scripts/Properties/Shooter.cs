@@ -26,6 +26,21 @@ public class Shooter : MonoBehaviour
         }
     }
 
+    public void AddLaserPoint(Vector2 position, float speed, Action callback)
+    {
+        LineRenderer line = laser.GetComponent<LineRenderer>();
+        int pointsCount = line.positionCount + 1;
+        line.positionCount = pointsCount;
+        int i = pointsCount - 2;
+        Vector3 startPosition = line.GetPosition(i);
+        Vector3 endPosition = new Vector3(position.x, startPosition.y, position.y);
+        StartCoroutine(AnimateLineSegment(line, i, pointsCount, startPosition, endPosition, speed, callback));
+    }
+
+    public void DestroyLaser()
+    {
+        Destroy(laser);
+    }
 
     public bool IsShooting()
     {
@@ -59,30 +74,40 @@ public class Shooter : MonoBehaviour
 
         for (int i = 0; i < pointsCount - 1; i++)
         {
-            float startTime = Time.time;
             Vector3 startPosition = trajectoryList[i];
             Vector3 endPosition = trajectoryList[i + 1];
-            Vector3 pos = startPosition;
-            float distance = Vector3.Distance(startPosition, endPosition);
-            float segmentDuration = distance / speed;
-            line.SetPosition(i, startPosition);
-
-            while (pos != endPosition)
-            {
-                float t = (Time.time - startTime) / segmentDuration;
-                pos = Vector3.Lerp(startPosition, endPosition, t);
-                line.SetPosition(i + 1, pos);
-
-                for (int j = i + 1; j < pointsCount; j++)
-                {
-                    line.SetPosition(j, pos);
-                }
-
-                yield return null;
-            }
+            yield return StartCoroutine(AnimateLineSegment(line, i, pointsCount, startPosition, endPosition, speed));
         }
 
         EndShoot(callback);
+    }
+
+    private IEnumerator AnimateLineSegment(LineRenderer line, int i, int pointsCount, Vector3 startPosition, Vector3 endPosition, float speed, Action callback = null)
+    {
+        float startTime = Time.time;
+        Vector3 pos = startPosition;
+        float distance = Vector3.Distance(startPosition, endPosition);
+        float segmentDuration = distance / speed;
+        line.SetPosition(i, startPosition);
+
+        while (pos != endPosition)
+        {
+            float t = (Time.time - startTime) / segmentDuration;
+            pos = Vector3.Lerp(startPosition, endPosition, t);
+            line.SetPosition(i + 1, pos);
+
+            for (int j = i + 1; j < pointsCount; j++)
+            {
+                line.SetPosition(j, pos);
+            }
+
+            yield return null;
+        }
+
+        if (callback != null)
+        {
+            callback();
+        }
     }
 
     private void CheckNextPosition(Vector2Int position, Direction direction)
@@ -118,15 +143,15 @@ public class Shooter : MonoBehaviour
 
     private void EndShoot(Action callback)
     {
-        if (!hitBlock || !hitBlock.ShootThrough(gameObject, hitDirection, callback))
+        if (!hitBlock || !hitBlock.ShootThrough(gameObject, hitDirection, this, callback))
         {
+            DestroyLaser();
             callback();
         }
     }
 
     private void EndShootCallback()
     {
-        Destroy(laser);
         isShooting = false;
     }
 }

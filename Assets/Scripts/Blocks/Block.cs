@@ -79,7 +79,7 @@ public class Block : MonoBehaviour
         position = new Vector2Int(x, z);
     }
 
-    public virtual bool ShootThrough(GameObject gameObject, Direction direction, Action callback)
+    public virtual bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
     {
         return false;
     }

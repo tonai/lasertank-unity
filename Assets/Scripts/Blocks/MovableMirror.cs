@@ -19,17 +19,17 @@ public class MovableMirror : Block
             return new Vector3(position.x * boardManager.tileSize, yOffset, position.y * boardManager.tileSize);
         }
 
-        continueShooting = canShootThrough;
-        return DirectionHelper.GetShootHitPosition(position, direction, yOffset, boardManager.tileSize);
+        return base.GetShootHitPosition(yOffset, ref direction, ref continueShooting);
     }
 
-    public override bool ShootThrough(GameObject gameObject, Direction direction, Action callback)
+    public override bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
     {
-        Shooter shooter = gameObject.GetComponent<Shooter>();
         Movable movable = GetComponent<Movable>();
 
         if (movable)
         {
+            Vector3 endPosition = DirectionHelper.GetShootHitPosition(position, direction, 0, boardManager.tileSize);
+            shooter.AddLaserPoint(new Vector2(endPosition.x, endPosition.z), movable.speed, shooter.DestroyLaser);
             movable.Move(direction, callback);
         }
 

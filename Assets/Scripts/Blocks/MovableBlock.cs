@@ -3,19 +3,14 @@ using UnityEngine;
 
 public class MovableBlock : Block
 {
-    public override Vector3 GetShootHitPosition(float yOffset, ref Direction direction, ref bool continueShooting)
+    public override bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
     {
-        continueShooting = canShootThrough;
-        return DirectionHelper.GetShootHitPosition(position, direction, yOffset, boardManager.tileSize);
-    }
-
-    public override bool ShootThrough(GameObject gameObject, Direction direction, Action callback)
-    {
-        Shooter shooter = gameObject.GetComponent<Shooter>();
         Movable movable = GetComponent<Movable>();
 
         if (movable)
         {
+            Vector3 endPosition = DirectionHelper.GetShootHitPosition(position, direction, 0, boardManager.tileSize);
+            shooter.AddLaserPoint(new Vector2(endPosition.x, endPosition.z), movable.speed, shooter.DestroyLaser);
             movable.Move(direction, callback);
         }
 
