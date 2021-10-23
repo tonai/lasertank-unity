@@ -11,6 +11,7 @@ public class Movable : MonoBehaviour
     private Block block;
     private BoardManager boardManager;
     private bool isMoving = false;
+    private Direction moveDirection;
 
     public void Start()
     {
@@ -48,6 +49,11 @@ public class Movable : MonoBehaviour
         }
     }*/
 
+    public Direction GetMoveDirection()
+    {
+        return moveDirection;
+    }
+
     public bool IsMoving()
     {
         return isMoving;
@@ -57,7 +63,7 @@ public class Movable : MonoBehaviour
     {
         Vector2Int position = block.GetPosition();
         Vector2Int nextPosition = DirectionHelper.GetDirectionPosition(position, direction);
-        block.direction = direction;
+        moveDirection = direction;
 
         if (CanMoveThroughObject(nextPosition.x, nextPosition.y))
         {
