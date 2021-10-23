@@ -2927,7 +2927,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1563530821
 Transform:
   m_ObjectHideFlags: 0
@@ -3323,10 +3323,6 @@ PrefabInstance:
     - target: {fileID: 1013459266845585946, guid: ae98f3b2f9fb19e4dba07742ad8d6f4d, type: 3}
       propertyPath: m_Name
       value: TankFree_Yel
-      objectReference: {fileID: 0}
-    - target: {fileID: 1013459266845585946, guid: ae98f3b2f9fb19e4dba07742ad8d6f4d, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1453792786044999346, guid: ae98f3b2f9fb19e4dba07742ad8d6f4d, type: 3}
       propertyPath: laserPrefab
