@@ -55,6 +55,7 @@ public class Movable : MonoBehaviour
     {
         Vector2Int position = block.GetPosition();
         Vector2Int nextPosition = DirectionHelper.GetDirectionPosition(position, direction);
+        block.direction = direction;
 
         if (CanMoveThroughObject(nextPosition.x, nextPosition.y))
         {

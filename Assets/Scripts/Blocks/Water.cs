@@ -16,7 +16,11 @@ public class Water : Block
         }
         else if (block.id == 39)
         {
-            StartCoroutine(AnimateSink(gameObject.transform, () => ReplaceBlock(gameObject, callback)));
+            StartCoroutine(AnimateSink(gameObject.transform, () => {
+                boardManager.RemoveBlock(position.x, position.y, true);
+                boardManager.ReplaceBlock(this.gameObject, gameObject);
+                callback();
+            }));
         }
         else
         {
@@ -47,15 +51,6 @@ public class Water : Block
         }
 
         transform.position = endPosition;
-        callback();
-    }
-
-    private void ReplaceBlock(GameObject gameObject, Action callback)
-    {
-        Board board = boardManager.GetBoard();
-        Destroy(this.gameObject);
-        board.SetObjectInstance(null, position.x, position.y);
-        board.SetGroundInstance(gameObject, position.x, position.y);
         callback();
     }
 }

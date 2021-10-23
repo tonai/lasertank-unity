@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -20,10 +21,10 @@ public class BoardManager : MonoBehaviour
         InitDictionary();
 
         // Ground
-        InitLevel(board.ground, false, 0);
+        InitLevel(board.ground, false);
 
         // Objects
-        InitLevel(board.objects, true, 1);
+        InitLevel(board.objects, true);
 
         // DebugHelper.DumpToConsole(board.ground);
     }
@@ -31,6 +32,78 @@ public class BoardManager : MonoBehaviour
     public Board GetBoard()
     {
         return board;
+    }
+
+    public void RemoveBlock(int x, int z, bool isObject)
+    {
+        if (isObject)
+        {
+            board.SetObjectInstance(null, x, z);
+        }
+        else
+        {
+            board.SetGroundInstance(null, x, z);
+        }
+    }
+
+    public void ReplaceBlock(GameObject previousObject, int id)
+    {
+        Block block = previousObject.GetComponent<Block>();
+        if (block != null)
+        {
+            Vector2Int position = block.GetPosition();
+            bool isObject = block.GetIsObject();
+            CreateBlock(position.x, position.y, id, isObject);
+            Destroy(previousObject);
+        }
+    }
+
+    public void ReplaceBlock(GameObject previousObject, GameObject nextObject)
+    {
+        Block block = previousObject.GetComponent<Block>();
+        if (block != null)
+        {
+            Vector2Int position = block.GetPosition();
+            if (block.GetIsObject())
+            {
+                board.SetObjectInstance(nextObject, position.x, position.y);
+            }
+            else
+            {
+                board.SetGroundInstance(nextObject, position.x, position.y);
+            }
+            Destroy(previousObject);
+        }
+    }
+
+    private void CreateBlock(int i, int j, int id, bool isObject)
+    {
+        GameObject prefab;
+        if (prefabDictionary.TryGetValue(id, out prefab))
+        {
+            Block block = prefab.GetComponent<Block>();
+
+            if (block != null)
+            {
+                int level = isObject ? 1 : 0;
+                Vector3 position = new Vector3(i * tileSize + block.xOffset, level * tileSize + block.yOffset, j * tileSize + block.zOffset);
+                GameObject instance = InitBlock(prefab, i, j, position, isObject);
+
+                if (isObject)
+                {
+                    board.SetObjectInstance(instance, i, j);
+                }
+                else
+                {
+                    board.SetGroundInstance(instance, i, j);
+                }
+
+                if (id == 100)
+                {
+                    InitCamera(instance);
+                }
+            }
+        }
     }
 
     private void InitDictionary()
@@ -55,7 +128,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private void InitLevel(Row[] rows, bool isObject, int level)
+    private void InitLevel(Row[] rows, bool isObject)
     {
         for (int i = 0; i < rows.Length; i++)
         {
@@ -64,31 +137,7 @@ public class BoardManager : MonoBehaviour
                 for (int j = 0; j < rows[i].row.Length; j++)
                 {
                     int id = rows[i].row[j];
-                    GameObject prefab;
-
-                    if (prefabDictionary.TryGetValue((int)id, out prefab))
-                    {
-                        Block block = prefab.GetComponent<Block>();
-
-                        if (block != null)
-                        {
-                            Vector3 position = new Vector3(i * tileSize + block.xOffset, level * tileSize + block.yOffset, j * tileSize + block.zOffset);
-                            GameObject instance = InitBlock(prefab, i, j, position, isObject);
-
-                            if (isObject) {
-                                board.SetObjectInstance(instance, i, j);
-                            }
-                            else
-                            {
-                                board.SetGroundInstance(instance, i, j);
-                            }
-
-                            if (id == 100)
-                            {
-                                InitCamera(instance);
-                            }
-                        }
-                    }
+                    CreateBlock(i, j, id, isObject);
                 }
             }
         }
