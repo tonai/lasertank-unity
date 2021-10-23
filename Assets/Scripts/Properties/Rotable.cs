@@ -55,7 +55,7 @@ public class Rotable : MonoBehaviour
     public void Rotate(float rotation, Action callback = null)
     {
         float nextRotation = (float)Math.Round(transform.rotation.eulerAngles.y) + rotation;
-        StartCoroutine(AnimateRotation(nextRotation, callback != null ? callback : EndRotationCallback));
+        StartCoroutine(AnimateRotation(nextRotation, () => EndRotationCallback(callback)));
     }
 
     private IEnumerator AnimateRotation(float nextRotation, Action callback)
@@ -86,8 +86,11 @@ public class Rotable : MonoBehaviour
         callback();
     }
 
-    private void EndRotationCallback()
+    private void EndRotationCallback(Action callback = null)
     {
         isRotating = false;
+        if (callback != null) {
+            callback();
+        }
     }
 }

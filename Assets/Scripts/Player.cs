@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : Block
 {
     public KeyCode forward;
     public KeyCode backward;
@@ -16,15 +15,16 @@ public class Player : MonoBehaviour
     private Rotable rotable;
     private Shooter shooter;
 
-    void Start()
+    public override void Start()
     {
+        base.Start();
         block = GetComponent<Block>();
         movable = GetComponent<Movable>();
         rotable = GetComponent<Rotable>();
         shooter = GetComponent<Shooter>();
     }
 
-    void Update()
+    public void Update()
     {
         Direction? targetDirection = null;
         bool canPerformAction = !movable.IsMoving() && !rotable.IsRotating() && !shooter.IsShooting();
@@ -67,6 +67,18 @@ public class Player : MonoBehaviour
                 HandleRelativeMovement((Direction)targetDirection);
             }
         }
+    }
+
+    public override Vector3 GetShootHitPosition(float yOffset, ref Direction direction, ref bool continueShooting)
+    {
+        continueShooting = false;
+        return new Vector3(position.x * boardManager.tileSize, yOffset, position.y * boardManager.tileSize);
+    }
+
+    public override bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
+    {
+        Debug.Log("Game over");
+        return true;
     }
 
     private void HandleRelativeMovement(Direction targetDirection)

@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class Movable : MonoBehaviour
@@ -60,7 +62,7 @@ public class Movable : MonoBehaviour
         if (CanMoveThroughObject(nextPosition.x, nextPosition.y))
         {
             Vector2 worldPosition = new Vector2(nextPosition.x * boardManager.tileSize + block.xOffset, nextPosition.y * boardManager.tileSize + block.zOffset);
-            StartCoroutine(AnimateMove(worldPosition, callback != null ? callback : EndMovementCallback));
+            StartCoroutine(AnimateMove(worldPosition, () => EndMovementCallback(callback)));
         }
         else if (callback != null)
         {
@@ -87,7 +89,7 @@ public class Movable : MonoBehaviour
         }
 
         transform.position = endPosition;
-        EndMovement((int)Math.Round((newPosition.x - block.xOffset) / boardManager.tileSize), (int)Math.Round((newPosition.z - block.zOffset) / boardManager.tileSize), callback);
+        _ = EndMovement((int)Math.Round((newPosition.x - block.xOffset) / boardManager.tileSize), (int)Math.Round((newPosition.z - block.zOffset) / boardManager.tileSize), callback);
     }
 
     private bool CanMoveOverGround(int x, int y)
@@ -128,20 +130,81 @@ public class Movable : MonoBehaviour
         return CanMoveOverGround(x, y);
     }
 
-    private void EndMovement(int x, int z, Action callback)
+    private List<Task> CheckEnemies()
+    {
+        Task task;
+        List<Task> promises = new List<Task>();
+        Vector2Int position = block.GetPosition();
+
+        task = CheckEnemiesInDirection(Direction.North, position);
+        if (task != null) promises.Add(task);
+        task = CheckEnemiesInDirection(Direction.Est, position);
+        if (task != null) promises.Add(task);
+        task = CheckEnemiesInDirection(Direction.South, position);
+        if (task != null) promises.Add(task);
+        task = CheckEnemiesInDirection(Direction.West, position);
+        if (task != null) promises.Add(task);
+
+        return promises;
+    }
+
+    private Task CheckEnemiesInDirection(Direction direction, Vector2Int position)
+    {
+        Board board = boardManager.GetBoard();
+        Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
+        GameObject objectBlock = board.GetObjectBlock(nextPosition.x, nextPosition.y);
+
+        if (objectBlock != null)
+        {
+            Block block = objectBlock.GetComponent<Block>();
+            Enemy enemy = objectBlock.GetComponent<Enemy>();
+
+            if (enemy != null)
+            {
+                return enemy.CheckShoot(direction);
+            }
+            else if (block != null && block.canShootThrough)
+            {
+                return CheckEnemiesInDirection(direction, nextPosition);
+            }
+
+            return null;
+        }
+
+        return CheckEnemiesInDirection(direction, nextPosition);
+    }
+
+    private async Task EndMovement(int x, int z, Action callback)
     {
         Board board = boardManager.GetBoard();
         board.SetNewObjectPosition(gameObject, x, z);
-        GameObject groundObject = board.GetGroundBlock(x, z);
-        Block block = groundObject.GetComponent<Block>();
-        if (!block || !block.MoveOver(gameObject, callback))
+        GameObject groundBlock = board.GetGroundBlock(x, z);
+
+        List<Task> tasks = new List<Task>();
+        if (this.block.id == 100)
+        {
+            tasks = CheckEnemies();
+        }
+
+        Block block = groundBlock.GetComponent<Block>();
+        TaskCompletionSource<bool> promise = new TaskCompletionSource<bool>();
+        if (!block || !block.MoveOver(gameObject, () => promise.SetResult(true)))
+        {
+            promise.SetResult(true);
+        }
+
+        tasks.Add(promise.Task);
+        await Task.WhenAll(tasks);
+        callback();
+
+    }
+
+    private void EndMovementCallback(Action callback = null)
+    {
+        isMoving = false;
+        if (callback != null)
         {
             callback();
         }
-    }
-
-    private void EndMovementCallback()
-    {
-        isMoving = false;
     }
 }

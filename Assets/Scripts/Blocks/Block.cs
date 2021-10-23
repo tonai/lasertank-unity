@@ -32,7 +32,7 @@ public class Block : MonoBehaviour
         }
     }*/
 
-    public void Start()
+    public virtual void Start()
     {
         if (rotationOffset != 0f)
         {

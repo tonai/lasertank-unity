@@ -61,7 +61,7 @@ public class Shooter : MonoBehaviour
 
         Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
         CheckNextPosition(nextPosition, direction);
-        StartCoroutine(AnimateLine(callback != null ? callback : EndShootCallback));
+        StartCoroutine(AnimateLine(() => EndShootCallback(callback)));
     }
 
     private IEnumerator AnimateLine(Action callback)
@@ -150,8 +150,12 @@ public class Shooter : MonoBehaviour
         }
     }
 
-    private void EndShootCallback()
+    private void EndShootCallback(Action callback = null)
     {
         isShooting = false;
+        if (callback != null)
+        {
+            callback();
+        }
     }
 }
