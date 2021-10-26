@@ -12,6 +12,7 @@ public class Movable : MonoBehaviour
     private BoardManager boardManager;
     private bool isMoving = false;
     private Direction moveDirection;
+    private Vector2Int startPosition;
 
     public void Start()
     {
@@ -61,17 +62,15 @@ public class Movable : MonoBehaviour
 
     public void Move(Direction direction, Action callback = null)
     {
-        Vector2Int position = block.GetPosition();
-        Vector2Int nextPosition = DirectionHelper.GetDirectionPosition(position, direction);
+        startPosition = block.GetPosition();
         moveDirection = direction;
+        Vector2Int nextPosition = DirectionHelper.GetDirectionPosition(startPosition, direction);
 
         if (CanMoveThroughObject(nextPosition.x, nextPosition.y))
         {
-            Vector2 worldPosition = new Vector2(nextPosition.x * boardManager.tileSize + block.xOffset, nextPosition.y * boardManager.tileSize + block.zOffset);
-
             Board board = boardManager.GetBoard();
+            Vector2 worldPosition = new Vector2(nextPosition.x * boardManager.tileSize + block.xOffset, nextPosition.y * boardManager.tileSize + block.zOffset);
             board.SetNewObjectPosition(gameObject, nextPosition.x, nextPosition.y);
-
             StartCoroutine(AnimateMove(worldPosition, () => EndMovementCallback(callback)));
         }
         else if (callback != null)
@@ -197,7 +196,10 @@ public class Movable : MonoBehaviour
     private async Task EndMovement(int x, int z, Action callback)
     {
         Board board = boardManager.GetBoard();
-        GameObject groundBlock = board.GetGroundBlock(x, z);
+
+        GameObject startGroundBlock = board.GetGroundBlock(startPosition.x, startPosition.y);
+        Block startBlock = startGroundBlock.GetComponent<Block>();
+        startBlock.MoveOut();
 
         List<Task> tasks = new List<Task>();
         if (this.block.id == 100)
@@ -205,9 +207,10 @@ public class Movable : MonoBehaviour
             tasks = CheckEnemies();
         }
 
-        Block block = groundBlock.GetComponent<Block>();
+        GameObject endGroundBlock = board.GetGroundBlock(x, z);
+        Block endBlock = endGroundBlock.GetComponent<Block>();
         TaskCompletionSource<bool> promise = new TaskCompletionSource<bool>();
-        if (!block || !block.MoveOver(gameObject, () => promise.SetResult(true)))
+        if (endBlock == null || !endBlock.MoveOver(gameObject, () => promise.SetResult(true)))
         {
             promise.SetResult(true);
         }

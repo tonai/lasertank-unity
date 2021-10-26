@@ -64,6 +64,8 @@ public class Block : MonoBehaviour
         return DirectionHelper.GetShootHitPosition(position, DirectionHelper.GetOppositeDirection(direction), yOffset, boardManager.tileSize);
     }
 
+    public virtual void MoveOut() { }
+
     public virtual bool MoveOver(GameObject gameObject, Action callback)
     {
         return false;

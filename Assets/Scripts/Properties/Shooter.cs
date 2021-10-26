@@ -172,7 +172,7 @@ public class Shooter : MonoBehaviour
 
     private void EndShoot(Action callback)
     {
-        if (!hitBlock || !hitBlock.ShootThrough(gameObject, (Direction)hitDirection, this, callback))
+        if (hitBlock == null || !hitBlock.ShootThrough(gameObject, (Direction)hitDirection, this, callback))
         {
             DestroyLaser();
             callback();

@@ -1,2 +1,0 @@
-Enemy => display game over when using arrow or ice
-BreakedIce => should transform into water only when we leave the block
