@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canon: {fileID: 6804819612903938989}
   laserPrefab: {fileID: 7191269517459453760, guid: 39bc716def5ef1e48801d9f2e07011aa, type: 3}
-  speed: 10
+  speed: 40
 --- !u!114 &1011700708465004972
 MonoBehaviour:
   m_ObjectHideFlags: 0

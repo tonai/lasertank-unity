@@ -68,6 +68,10 @@ public class Movable : MonoBehaviour
         if (CanMoveThroughObject(nextPosition.x, nextPosition.y))
         {
             Vector2 worldPosition = new Vector2(nextPosition.x * boardManager.tileSize + block.xOffset, nextPosition.y * boardManager.tileSize + block.zOffset);
+
+            Board board = boardManager.GetBoard();
+            board.SetNewObjectPosition(gameObject, nextPosition.x, nextPosition.y);
+
             StartCoroutine(AnimateMove(worldPosition, () => EndMovementCallback(callback)));
         }
         else if (callback != null)
@@ -158,32 +162,41 @@ public class Movable : MonoBehaviour
     {
         Board board = boardManager.GetBoard();
         Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
-        GameObject objectBlock = board.GetObjectBlock(nextPosition.x, nextPosition.y);
-
-        if (objectBlock != null)
+        if (!board.IsPositionInRange(nextPosition))
         {
-            Block block = objectBlock.GetComponent<Block>();
-            Enemy enemy = objectBlock.GetComponent<Enemy>();
-
-            if (enemy != null)
-            {
-                return enemy.CheckShoot(direction);
-            }
-            else if (block != null && block.canShootThrough)
-            {
-                return CheckEnemiesInDirection(direction, nextPosition);
-            }
-
+            // Out of range
             return null;
         }
 
-        return CheckEnemiesInDirection(direction, nextPosition);
+        GameObject objectBlock = board.GetObjectBlock(nextPosition.x, nextPosition.y);
+        if (objectBlock == null)
+        {
+            // No object: continue with next position
+            return CheckEnemiesInDirection(direction, nextPosition);
+        }
+
+        Block block = objectBlock.GetComponent<Block>();
+        Enemy enemy = objectBlock.GetComponent<Enemy>();
+
+        if (enemy != null)
+        {
+            // Enemy: check if enemy can shoot
+            return enemy.CheckShoot(direction);
+        }
+        else if (block != null && block.canShootThrough)
+        {
+            // Block: but we can shoot through, so continue with next position
+            return CheckEnemiesInDirection(direction, nextPosition);
+        }
+
+        // Block: and we can't shoot trhough
+        return null;
+
     }
 
     private async Task EndMovement(int x, int z, Action callback)
     {
         Board board = boardManager.GetBoard();
-        board.SetNewObjectPosition(gameObject, x, z);
         GameObject groundBlock = board.GetGroundBlock(x, z);
 
         List<Task> tasks = new List<Task>();

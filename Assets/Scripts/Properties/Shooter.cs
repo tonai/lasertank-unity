@@ -12,9 +12,11 @@ public class Shooter : MonoBehaviour
     private BoardManager boardManager;
     private float canonYOffset;
     private Block hitBlock;
-    private Direction hitDirection;
+    private Direction? hitDirection;
     private bool isShooting = false;
     private GameObject laser;
+    private Direction shootDirection;
+    private Vector2Int shootPosition;
     private List<Vector3> trajectoryList;
 
     public void Start()
@@ -59,24 +61,38 @@ public class Shooter : MonoBehaviour
         canonYOffset = canon.transform.position.y;
         trajectoryList.Add(canon.transform.position);
 
-        Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
-        CheckNextPosition(nextPosition, direction);
+        shootDirection = direction;
+        shootPosition = DirectionHelper.GetNextPosition(position, direction);
+
         StartCoroutine(AnimateLine(() => EndShootCallback(callback)));
     }
 
     private IEnumerator AnimateLine(Action callback)
     {
+        bool continueShooting = true;
+        int i = 0;
+        hitBlock = null;
+        hitDirection = null;
+
         laser = Instantiate(laserPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         LineRenderer line = laser.GetComponent<LineRenderer>();
-        int pointsCount = trajectoryList.Count;
-        line.positionCount = pointsCount;
         laser.SetActive(true);
 
-        for (int i = 0; i < pointsCount - 1; i++)
+        while (continueShooting)
         {
-            Vector3 startPosition = trajectoryList[i];
-            Vector3 endPosition = trajectoryList[i + 1];
-            yield return StartCoroutine(AnimateLineSegment(line, i, pointsCount, startPosition, endPosition, speed));
+            CheckNextPosition(shootPosition, ref shootDirection, ref continueShooting);
+            int pointsCount = trajectoryList.Count;
+            line.positionCount = pointsCount;
+
+            if (pointsCount > 1 && i < pointsCount - 1) {
+                Vector3 startPosition = trajectoryList[i];
+                Vector3 endPosition = trajectoryList[i + 1];
+                yield return StartCoroutine(AnimateLineSegment(line, i++, pointsCount, startPosition, endPosition, speed));
+            }
+            else
+            {
+                continueShooting = false;
+            }
         }
 
         EndShoot(callback);
@@ -96,13 +112,14 @@ public class Shooter : MonoBehaviour
             pos = Vector3.Lerp(startPosition, endPosition, t);
             line.SetPosition(i + 1, pos);
 
-            for (int j = i + 1; j < pointsCount; j++)
+            /*for (int j = i + 1; j < pointsCount; j++)
             {
                 line.SetPosition(j, pos);
-            }
+            }*/
 
             yield return null;
         }
+        line.SetPosition(i + 1, endPosition);
 
         if (callback != null)
         {
@@ -110,9 +127,9 @@ public class Shooter : MonoBehaviour
         }
     }
 
-    private void CheckNextPosition(Vector2Int position, Direction direction)
+    private void CheckNextPosition(Vector2Int position, ref Direction direction, ref bool continueShooting)
     {
-        bool continueShooting = false;
+        Block objectBlock = null;
         Board board = boardManager.GetBoard();
 
         if (board.IsPositionInRange(position))
@@ -122,28 +139,40 @@ public class Shooter : MonoBehaviour
 
             if (objectObject != null)
             {
-                Block objectBlock = objectObject.GetComponent<Block>();
+                objectBlock = objectObject.GetComponent<Block>();
 
                 if (objectBlock != null)
                 {
-                    hitBlock = objectBlock;
-                    hitDirection = direction;
                     Vector3 trajectoryPosition = objectBlock.GetShootHitPosition(canonYOffset, ref direction, ref continueShooting);
                     trajectoryList.Add(trajectoryPosition);
                 }
             }
+
+            if (objectBlock == null)
+            {
+                Vector3 trajectoryPosition = DirectionHelper.GetShootHitPosition(position, direction, canonYOffset, boardManager.tileSize);
+                trajectoryList.Add(trajectoryPosition);
+            }
+        }
+        else
+        {
+            continueShooting = false;
         }
 
         if (continueShooting)
         {
-            Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
-            CheckNextPosition(nextPosition, direction);
+            shootPosition = DirectionHelper.GetNextPosition(position, direction);
+        }
+        else if (objectBlock != null)
+        {
+            hitBlock = objectBlock;
+            hitDirection = direction;
         }
     }
 
     private void EndShoot(Action callback)
     {
-        if (!hitBlock || !hitBlock.ShootThrough(gameObject, hitDirection, this, callback))
+        if (!hitBlock || !hitBlock.ShootThrough(gameObject, (Direction)hitDirection, this, callback))
         {
             DestroyLaser();
             callback();
