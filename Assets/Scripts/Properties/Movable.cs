@@ -25,31 +25,6 @@ public class Movable : MonoBehaviour
         }
     }
 
-    /*public void Update()
-    {
-        if (nextPosition != null)
-        {
-            Vector3 currentPosition = transform.position;
-            Vector3 targetPosition = new Vector3(((Vector2)nextPosition).x, currentPosition.y, ((Vector2)nextPosition).y);
-            float distance = Vector3.Distance(targetPosition, currentPosition);
-
-            if (distance > 0)
-            {
-                Vector3 direction = (targetPosition - currentPosition).normalized;
-                Vector3 newPosition = currentPosition + direction * speed * Time.deltaTime * (isKeyDown ? boardManager.tileSize : distance);
-                float distanceAfterMoving = Vector3.Distance(targetPosition, newPosition);
-
-                if (distanceAfterMoving > distance || distanceAfterMoving < 0.01f)
-                {
-                    newPosition = targetPosition;
-                    EndMovement((int)Math.Round(newPosition.x / boardManager.tileSize), (int)Math.Round(newPosition.z / boardManager.tileSize));
-                }
-
-                transform.position = newPosition;
-            }
-        }
-    }*/
-
     public Direction GetMoveDirection()
     {
         return moveDirection;
@@ -197,9 +172,9 @@ public class Movable : MonoBehaviour
     {
         Board board = boardManager.GetBoard();
 
-        GameObject startGroundBlock = board.GetGroundBlock(startPosition.x, startPosition.y);
-        Block startBlock = startGroundBlock.GetComponent<Block>();
-        startBlock.MoveOut();
+        GameObject startGround = board.GetGroundBlock(startPosition.x, startPosition.y);
+        Block startGroundBlock = startGround.GetComponent<Block>();
+        startGroundBlock.MoveOut();
 
         List<Task> tasks = new List<Task>();
         if (this.block.id == 100)
@@ -207,12 +182,26 @@ public class Movable : MonoBehaviour
             tasks = CheckEnemies();
         }
 
-        GameObject endGroundBlock = board.GetGroundBlock(x, z);
-        Block endBlock = endGroundBlock.GetComponent<Block>();
+        bool checkGround = true;
         TaskCompletionSource<bool> promise = new TaskCompletionSource<bool>();
-        if (endBlock == null || !endBlock.MoveOver(gameObject, () => promise.SetResult(true)))
+        GameObject endFloor = board.GetFloorBlock(x, z);
+        if (endFloor != null)
         {
-            promise.SetResult(true);
+            Block endFloorBlock = endFloor.GetComponent<Block>();
+            if (endFloorBlock != null && endFloorBlock.MoveOver(gameObject, () => promise.SetResult(true)))
+            {
+                checkGround = false;
+            } 
+        }
+
+        if (checkGround)
+        {
+            GameObject endGround = board.GetGroundBlock(x, z);
+            Block endGroundBlock = endGround.GetComponent<Block>();
+            if (endGroundBlock == null || !endGroundBlock.MoveOver(gameObject, () => promise.SetResult(true)))
+            {
+                promise.SetResult(true);
+            }
         }
 
         tasks.Add(promise.Task);

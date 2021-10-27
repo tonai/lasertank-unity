@@ -21,12 +21,13 @@ public class BoardManager : MonoBehaviour
         InitDictionary();
 
         // Ground
-        InitLevel(board.ground, false);
+        InitLevel(board.ground, BlockType.Ground);
+
+        // Floor
+        InitLevel(board.floor, BlockType.Floor);
 
         // Objects
-        InitLevel(board.objects, true);
-
-        // DebugHelper.DumpToConsole(board.ground);
+        InitLevel(board.objects, BlockType.Object);
     }
 
     public Board GetBoard()
@@ -52,8 +53,8 @@ public class BoardManager : MonoBehaviour
         if (block != null)
         {
             Vector2Int position = block.GetPosition();
-            bool isObject = block.GetIsObject();
-            CreateBlock(position.x, position.y, id, isObject);
+            BlockType blockType = block.GetBlockType();
+            CreateBlock(position.x, position.y, id, blockType);
             Destroy(previousObject);
         }
     }
@@ -64,19 +65,13 @@ public class BoardManager : MonoBehaviour
         if (block != null)
         {
             Vector2Int position = block.GetPosition();
-            if (block.GetIsObject())
-            {
-                board.SetObjectInstance(nextObject, position.x, position.y);
-            }
-            else
-            {
-                board.SetGroundInstance(nextObject, position.x, position.y);
-            }
+            BlockType blockType = block.GetBlockType();
+            board.SetInstance(blockType, nextObject, position.x, position.y);
             Destroy(previousObject);
         }
     }
 
-    private void CreateBlock(int i, int j, int id, bool isObject)
+    private void CreateBlock(int i, int j, int id, BlockType blockType)
     {
         GameObject prefab;
         if (prefabDictionary.TryGetValue(id, out prefab))
@@ -85,24 +80,34 @@ public class BoardManager : MonoBehaviour
 
             if (block != null)
             {
-                int level = isObject ? 1 : 0;
-                Vector3 position = new Vector3(i * tileSize + block.xOffset, level * tileSize + block.yOffset, j * tileSize + block.zOffset);
-                GameObject instance = InitBlock(prefab, i, j, position, isObject);
-
-                if (isObject)
-                {
-                    board.SetObjectInstance(instance, i, j);
-                }
-                else
-                {
-                    board.SetGroundInstance(instance, i, j);
-                }
+                float yOffset = GetYOffset(blockType);
+                Vector3 position = new Vector3(i * tileSize + block.xOffset, yOffset * tileSize + block.yOffset, j * tileSize + block.zOffset);
+                GameObject instance = InitBlock(prefab, i, j, position, blockType);
+                board.SetInstance(blockType, instance, i, j);
 
                 if (id == 100)
                 {
                     InitCamera(instance);
                 }
             }
+        }
+    }
+
+    private float GetYOffset(BlockType blockType)
+    {
+        switch(blockType)
+        {
+            case BlockType.Ground:
+                return 0;
+
+            case BlockType.Floor:
+                return 0.5f;
+
+            case BlockType.Object:
+                return 1;
+
+            default:
+                return 0;
         }
     }
 
@@ -128,7 +133,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private void InitLevel(Row[] rows, bool isObject)
+    private void InitLevel(Row[] rows, BlockType blockType)
     {
         for (int i = 0; i < rows.Length; i++)
         {
@@ -137,13 +142,13 @@ public class BoardManager : MonoBehaviour
                 for (int j = 0; j < rows[i].row.Length; j++)
                 {
                     int id = rows[i].row[j];
-                    CreateBlock(i, j, id, isObject);
+                    CreateBlock(i, j, id, blockType);
                 }
             }
         }
     }
 
-    private GameObject InitBlock(GameObject prefab, int x, int z, Vector3 position,  bool isObject)
+    private GameObject InitBlock(GameObject prefab, int x, int z, Vector3 position, BlockType blockType)
     {
         GameObject instance = Instantiate(prefab, position, Quaternion.identity);
         instance.SetActive(true);
@@ -152,7 +157,7 @@ public class BoardManager : MonoBehaviour
         if (block != null)
         {
             block.SetPosition(x, z);
-            block.SetIsObject(isObject);
+            block.SetBlockType(blockType);
         }
         return instance;
     }

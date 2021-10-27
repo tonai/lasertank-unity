@@ -13,24 +13,9 @@ public class Block : MonoBehaviour
     public float yOffset = 0f;
     public float zOffset = 0f;
 
+    protected BlockType blockType;
     protected BoardManager boardManager;
-    protected bool isObject;
     protected Vector2Int position;
-
-    /*public void OnDestroy()
-    {
-        Board board = boardManager.GetBoard();
-
-        if (isObject)
-        {
-            board.SetObjectInstance(null, position.x, position.y);
-        }
-        else
-        {
-            board.SetGroundInstance(null, position.x, position.y);
-
-        }
-    }*/
 
     public virtual void Start()
     {
@@ -53,9 +38,9 @@ public class Block : MonoBehaviour
         return position;
     }
 
-    public bool GetIsObject()
+    public BlockType GetBlockType()
     {
-        return isObject;
+        return blockType;
     }
 
     public virtual Vector3 GetShootHitPosition(float yOffset, ref Direction direction, ref bool continueShooting)
@@ -71,9 +56,9 @@ public class Block : MonoBehaviour
         return false;
     }
 
-    public void SetIsObject(bool isObject)
+    public void SetBlockType(BlockType blockType)
     {
-        this.isObject = isObject;
+        this.blockType = blockType;
     }
 
     public void SetPosition(int x, int z)
