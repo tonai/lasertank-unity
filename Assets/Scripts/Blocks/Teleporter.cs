@@ -22,10 +22,9 @@ public class Teleporter : Block
     public override bool MoveOver(GameObject gameObject, Action callback)
     {
         List<GameObject> teleporters;
-        Block block = gameObject.GetComponent<Block>();
         GameObject teleporter = this.gameObject;
 
-        if (block != null && instances.TryGetValue(id, out teleporters))
+        if (instances.TryGetValue(id, out teleporters))
         {
             int index = teleporters.IndexOf(teleporter);
             if (index != -1)
@@ -35,12 +34,14 @@ public class Teleporter : Block
                 {
                     index = 0;
                 }
+
                 GameObject nextTeleporter = teleporters[index];
                 Block teleporterBlock = nextTeleporter.GetComponent<Block>();
                 if (teleporterBlock != null)
                 {
+                    Board board = boardManager.GetBoard();
                     Vector2Int position = teleporterBlock.GetPosition();
-                    block.SetPosition(position.x, position.y);
+                    board.SetNewObjectPosition(gameObject, position.x, position.y);
                     gameObject.transform.position += nextTeleporter.transform.position - teleporter.transform.position;
                     callback();
                 }
