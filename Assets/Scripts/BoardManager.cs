@@ -101,7 +101,7 @@ public class BoardManager : MonoBehaviour
                 return 0;
 
             case BlockType.Floor:
-                return 0.5f;
+                return 0.501f;
 
             case BlockType.Object:
                 return 1;
