@@ -1,18 +1,15 @@
-using System;
 using UnityEngine;
 
-public class Key : Block
+public class Door : Block
 {
     public int index = 0;
 
-    public override bool MoveOver(GameObject gameObject, Action callback)
+    public override bool CanMoveThrough(GameObject gameObject)
     {
         Opener opener = gameObject.GetComponent<Opener>();
 
-        if (opener)
+        if (opener && opener.OpenDoor(index))
         {
-            opener.AddKey(index);
-            callback();
             Destroy(this.gameObject);
             return true;
         }

@@ -85,7 +85,7 @@ public class Movable : MonoBehaviour
         {
             Block groundBlock = groundObject.GetComponent<Block>();
 
-            if (groundBlock != null && groundBlock.canMoveOver)
+            if (groundBlock != null && groundBlock.CanMoveOver(gameObject))
             {
                 return true;
             }
@@ -103,7 +103,7 @@ public class Movable : MonoBehaviour
         {
             Block objectBlock = objectObject.GetComponent<Block>();
 
-            if (objectBlock != null && objectBlock.canMoveThrough)
+            if (objectBlock != null && objectBlock.CanMoveThrough(gameObject))
             {
                 return CanMoveOverGround(x, y);
             }

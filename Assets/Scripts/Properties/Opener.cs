@@ -40,6 +40,7 @@ public class Opener : MonoBehaviour
         if (keys[index] > 0)
         {
             keys[index]--;
+            UpdateUI(index);
             return true;
         }
         return false;

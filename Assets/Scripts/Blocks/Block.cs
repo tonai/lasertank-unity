@@ -33,6 +33,16 @@ public class Block : MonoBehaviour
         }
     }
 
+    public virtual bool CanMoveThrough(GameObject gameObject)
+    {
+        return canMoveThrough;
+    }
+
+    public virtual bool CanMoveOver(GameObject gameObject)
+    {
+        return canMoveOver;
+    }
+
     public Vector2Int GetPosition()
     {
         return position;
