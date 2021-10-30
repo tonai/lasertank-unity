@@ -96,6 +96,7 @@ GameObject:
   - component: {fileID: 120862987}
   - component: {fileID: 120862990}
   - component: {fileID: 1453792786044999346}
+  - component: {fileID: 120862984}
   m_Layer: 0
   m_Name: TankFree_Yel
   m_TagString: Untagged
@@ -239,6 +240,33 @@ MonoBehaviour:
   canon: {fileID: 1641193759526630708}
   laserPrefab: {fileID: 0}
   speed: 40
+--- !u!114 &120862984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1013459266845585946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 199de2392c20bb440833a6de97a3ca47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  keyUIPrefab: {fileID: 96396180299497490, guid: d0aac5ce8c4e17243a0b3eec6b107663, type: 3}
+  sprites:
+  - {fileID: -1722539767903399326, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  - {fileID: -2018968827443427868, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  - {fileID: 3950689983899740486, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  - {fileID: -3525548655422949061, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  - {fileID: -577312649904740640, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  - {fileID: -3114738102144766914, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  - {fileID: 4172163778452043772, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  - {fileID: 2414474533063011785, guid: bc277c1ec2387fe42a53b93027526a8f, type: 3}
+  xStartPosition: -50
+  yStartPosition: 25
+  xDelta: 0
+  yDelta: 50
 --- !u!1 &1641193759526630708
 GameObject:
   m_ObjectHideFlags: 0

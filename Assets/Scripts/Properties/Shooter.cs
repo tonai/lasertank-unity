@@ -41,7 +41,7 @@ public class Shooter : MonoBehaviour
 
     public void DestroyLaser()
     {
-        Destroy(laser);
+        Destroy(laser, 0.1f);
     }
 
     public bool IsShooting()

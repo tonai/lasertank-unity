@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Enemy : Block
 {
-    private bool isDestroyed = false;
+    protected bool isDestroyed = false;
 
     public Task CheckShoot(Direction direction)
     {
@@ -33,7 +33,7 @@ public class Enemy : Block
 
     public override bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
     {
-        if (direction == DirectionHelper.GetOppositeDirection(this.direction))
+        if (!isDestroyed && direction == DirectionHelper.GetOppositeDirection(this.direction))
         {
             isDestroyed = true;
             ApplyColor(ComponentHelper.FindComponentInChildWithTag<Transform>(this.gameObject, "Tank"));
