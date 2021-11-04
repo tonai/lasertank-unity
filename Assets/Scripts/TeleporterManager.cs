@@ -31,6 +31,7 @@ public class TeleporterManager : MonoBehaviour
 
     public GameObject GetTeleporter(GameObject teleporter)
     {
+        Board board = BoardManager.current.GetBoard();
         Block block = teleporter.GetComponent<Block>();
 
         if (block != null)
@@ -40,15 +41,30 @@ public class TeleporterManager : MonoBehaviour
             if (instances.TryGetValue(block.id, out teleporters))
             {
                 int index = teleporters.IndexOf(GetKet(block));
+                int nextIndex = index;
 
-                if (index != -1)
+                if (nextIndex != -1)
                 {
-                    index += 1;
-                    if (index == teleporters.Count)
-                    {
-                        index = 0;
-                    }
-                    return GetTeleporter(teleporters[index]);
+                    do {
+                        nextIndex += 1;
+                        if (nextIndex == teleporters.Count)
+                        {
+                            nextIndex = 0;
+                        }
+
+                        GameObject nextTeleporter = GetTeleporter(teleporters[nextIndex]);
+                        Block nextBlock = nextTeleporter.GetComponent<Block>();
+                        if (nextBlock != null)
+                        {
+                            Vector2Int position = nextBlock.GetPosition();
+                            GameObject objectOnTop = board.GetBlock(BlockType.Object, position.x, position.y);
+                            
+                            if (objectOnTop == null)
+                            {
+                                return nextTeleporter;
+                            }
+                        }
+                    } while (nextIndex != index);
                 }
             }
         }
