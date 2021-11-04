@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Door : Block
@@ -8,10 +9,22 @@ public class Door : Block
     {
         Opener opener = gameObject.GetComponent<Opener>();
 
-        if (opener && opener.OpenDoor(index))
+        if (opener && opener.CanOpenDoor(index))
         {
-            Destroy(this.gameObject);
             return true;
+        }
+
+        return false;
+    }
+
+    public override bool MoveStart(GameObject gameObject)
+    {
+        Opener opener = gameObject.GetComponent<Opener>();
+
+        if (opener && opener.CanOpenDoor(index))
+        {
+            opener.OpenDoor(index);
+            Destroy(this.gameObject);
         }
 
         return false;

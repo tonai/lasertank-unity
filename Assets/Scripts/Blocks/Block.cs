@@ -14,22 +14,15 @@ public class Block : MonoBehaviour
     public float zOffset = 0f;
 
     protected BlockType blockType;
-    protected BoardManager boardManager;
     protected Vector2Int position;
 
-    public virtual void Start()
+    public virtual void Awake()
     {
         if (rotationOffset != 0f)
         {
             Quaternion rotation = new Quaternion();
             rotation.eulerAngles = new Vector3(transform.rotation.eulerAngles.x, rotationOffset, transform.rotation.eulerAngles.z);
             transform.rotation = rotation;
-        }
-
-        GameObject boardManagerInstance = GameObject.FindWithTag("BoardManager");
-        if (boardManagerInstance != null)
-        {
-            boardManager = boardManagerInstance.GetComponent<BoardManager>();
         }
     }
 
@@ -56,14 +49,25 @@ public class Block : MonoBehaviour
     public virtual Vector3 GetShootHitPosition(float yOffset, ref Direction direction, ref bool continueShooting)
     {
         continueShooting = canShootThrough;
-        return DirectionHelper.GetShootHitPosition(position, DirectionHelper.GetOppositeDirection(direction), yOffset, boardManager.tileSize);
+        return DirectionHelper.GetShootHitPosition(position, DirectionHelper.GetOppositeDirection(direction), yOffset, BoardManager.current.tileSize);
+    }
+
+    public virtual bool MoveEnd(GameObject gameObject, Action callback)
+    {
+        callback();
+        return true;
+    }
+
+    public virtual bool MoveStart(GameObject gameObject)
+    {
+        return true;
     }
 
     public virtual void MoveOut() { }
 
-    public virtual bool MoveOver(GameObject gameObject, Action callback)
+    public virtual (int, object) Serialize()
     {
-        return false;
+        return (id, null);
     }
 
     public void SetBlockType(BlockType blockType)
@@ -76,8 +80,11 @@ public class Block : MonoBehaviour
         position = new Vector2Int(x, z);
     }
 
-    public virtual bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
+    public virtual void SetState(object state) { }
+
+    public virtual void ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
     {
-        return false;
+        shooter.DestroyLaser();
+        callback();
     }
 }

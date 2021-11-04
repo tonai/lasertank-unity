@@ -25,24 +25,40 @@ public class Enemy : Block
         if (direction == DirectionHelper.GetOppositeDirection(this.direction))
         {
             continueShooting = false;
-            return new Vector3(position.x * boardManager.tileSize, yOffset, position.y * boardManager.tileSize);
+            float tileSize = BoardManager.current.tileSize;
+            return new Vector3(position.x * tileSize, yOffset, position.y * tileSize);
         }
 
         return base.GetShootHitPosition(yOffset, ref direction, ref continueShooting);
     }
 
-    public override bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
+    public override (int, object) Serialize()
+    {
+        return (id, isDestroyed);
+    }
+
+    public override void SetState(object state)
+    {
+        isDestroyed = (bool)state;
+        if (isDestroyed)
+        {
+            ApplyColor(ComponentHelper.FindComponentInChildWithTag<Transform>(gameObject, "Tank"));
+        }
+    }
+
+    public override void ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
     {
         if (!isDestroyed && direction == DirectionHelper.GetOppositeDirection(this.direction))
         {
+            HistoryManager.current.Push();
             isDestroyed = true;
             ApplyColor(ComponentHelper.FindComponentInChildWithTag<Transform>(this.gameObject, "Tank"));
             shooter.DestroyLaser();
             callback();
-            return true;
+            return;
         }
 
-        return base.ShootThrough(gameObject, direction, shooter, callback);
+        base.ShootThrough(gameObject, direction, shooter, callback);
     }
 
     private void ApplyColor(Transform transform)

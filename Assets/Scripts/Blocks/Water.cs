@@ -6,7 +6,7 @@ public class Water : Block
 {
     public float sinkSpeed = 2f;
 
-    public override bool MoveOver(GameObject gameObject, Action callback)
+    public override bool MoveEnd(GameObject gameObject, Action callback)
     {
         Block block = gameObject.GetComponent<Block>();
 
@@ -17,8 +17,8 @@ public class Water : Block
         else if (block.id == 39)
         {
             StartCoroutine(AnimateSink(gameObject.transform, () => {
-                boardManager.RemoveBlock(position.x, position.y, true);
-                boardManager.ReplaceBlock(this.gameObject, gameObject);
+                BoardManager.current.RemoveBlock(position.x, position.y, true);
+                BoardManager.current.ReplaceBlock(this.gameObject, gameObject);
                 callback();
             }));
         }
@@ -36,7 +36,7 @@ public class Water : Block
     private IEnumerator AnimateSink(Transform transform, Action callback)
     {
         Vector3 startPosition = transform.position;
-        Vector3 endPosition = new Vector3(startPosition.x, startPosition.y - boardManager.tileSize, startPosition.z);
+        Vector3 endPosition = new Vector3(startPosition.x, startPosition.y - BoardManager.current.tileSize, startPosition.z);
         Vector3 newPosition = startPosition;
         float startTime = Time.time;
         float distance = Vector3.Distance(endPosition, startPosition);

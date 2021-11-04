@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class Finish : Block
 {
-    public override bool MoveOver(GameObject gameObject, Action callback)
+    public override bool MoveEnd(GameObject gameObject, Action callback)
     {
         Block block = gameObject.GetComponent<Block>();
 

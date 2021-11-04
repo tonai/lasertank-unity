@@ -5,7 +5,7 @@ public class Key : Block
 {
     public int index = 0;
 
-    public override bool MoveOver(GameObject gameObject, Action callback)
+    public override bool MoveEnd(GameObject gameObject, Action callback)
     {
         Opener opener = gameObject.GetComponent<Opener>();
 
@@ -17,6 +17,6 @@ public class Key : Block
             return true;
         }
 
-        return false;
+        return base.MoveEnd(gameObject, callback);
     }
 }

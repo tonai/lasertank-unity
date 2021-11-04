@@ -1,84 +1,41 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Opener : MonoBehaviour
 {
-    public Canvas canvas;
-    public GameObject keyUIPrefab;
-    public Sprite[] sprites;
-    public float xStartPosition = 0;
-    public float yStartPosition = 0;
-    public float xDelta = 0;
-    public float yDelta = 0;
-
     private int[] keys = new int[8];
-    private GameObject[] keyUIs = new GameObject[8];
-    private float xPosition;
-    private float yPosition;
-
-    public void Start()
-    {
-        xPosition = xStartPosition;
-        yPosition = yStartPosition;
-    }
 
     public void AddKey(int index)
     {
         keys[index]++;
-        if (keyUIs[index] == null)
-        {
-            CreateUI(index);
-        }
-        else
-        {
-            UpdateUI(index);
-        }
+        UIManager.current.CreateOrUpdate(index, keys[index].ToString());
     }
 
-    public bool OpenDoor(int index)
+    public bool CanOpenDoor(int index)
     {
-        if (keys[index] > 0)
+        return keys[index] > 0;
+    }
+
+    public void OpenDoor(int index)
+    {
+        if (CanOpenDoor(index))
         {
             keys[index]--;
-            UpdateUI(index);
-            return true;
+            UIManager.current.UpdateUI(index, keys[index].ToString());
         }
-        return false;
     }
 
-    private void CreateUI(int index)
+    public int[] Serialize()
     {
-        GameObject instanceUI = Instantiate(keyUIPrefab, Vector3.zero, Quaternion.identity);
-        instanceUI.SetActive(true);
-        instanceUI.transform.SetParent(canvas.transform);
-
-        RectTransform rectTransform = instanceUI.GetComponent<RectTransform>();
-        if (rectTransform != null)
-        {
-            rectTransform.anchoredPosition = new Vector2(xPosition, yPosition);
-        }
-        xPosition += xDelta;
-        yPosition += yDelta;
-
-        Image image = ComponentHelper.FindComponentInChildWithTag<Image>(instanceUI, "Image");
-        if (image != null && sprites[index] != null)
-        {
-            image.sprite = sprites[index];
-        }
-
-        keyUIs[index] = instanceUI;
-        UpdateUI(index);
+        return (int[])keys.Clone();
     }
 
-    private void UpdateUI(int index)
+    public void SetState(int[] state)
     {
-        GameObject instanceUI = keyUIs[index];
-        if (instanceUI != null) {
-            Text text = ComponentHelper.FindComponentInChildWithTag<Text>(instanceUI, "Text");
-            if (text)
-            {
-                text.text = 'x' + keys[index].ToString();
-            }
+        for (int i = 0; i < state.Length; i++) {
+            keys[i] = state[i];
+            UIManager.current.UpdateUI(i, keys[i].ToString());
         }
     }
+
+    
 }

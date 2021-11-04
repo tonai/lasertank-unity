@@ -13,19 +13,30 @@ public class Ice : Block
         }
         if (breachLevel == 0)
         {
-            boardManager.ReplaceBlock(this.gameObject, 18);
+            BoardManager.current.ReplaceBlock(this.gameObject, 18);
         }
     }
 
-    public override bool MoveOver(GameObject gameObject, Action callback)
+    public override bool MoveEnd(GameObject gameObject, Action callback)
     {
         Movable movable = gameObject.GetComponent<Movable>();
 
         if (movable)
         {
-            movable.Move(movable.GetMoveDirection(), callback);
+            movable.Move(movable.GetMoveDirection(), false, callback);
+            return false;
         }
 
-        return true;
+        return base.MoveEnd(gameObject, callback);
+    }
+
+    public override (int, object) Serialize()
+    {
+        return (id, breachLevel);
+    }
+
+    public override void SetState(object state)
+    {
+        breachLevel = (int)state;
     }
 }

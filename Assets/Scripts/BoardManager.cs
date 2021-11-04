@@ -1,10 +1,10 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 
 public class BoardManager : MonoBehaviour
 {
+    public static BoardManager current;
+
     public TextAsset jsonFile;
     public GameObject[] prefabs;
     public GameObject mainCamera;
@@ -12,6 +12,11 @@ public class BoardManager : MonoBehaviour
 
     private Board board;
     private Dictionary<int, GameObject> prefabDictionary = new Dictionary<int, GameObject>();
+
+    private void Awake()
+    {
+        current = this;
+    }
 
     public void Start()
     {
@@ -28,6 +33,23 @@ public class BoardManager : MonoBehaviour
 
         // Objects
         InitLevel(board.objects, BlockType.Object);
+    }
+
+    public void Clear()
+    {
+        Board board = GetBoard();
+        int xSize = board.GetXSize();
+        int zSize = board.GetZSize();
+
+        for (int i = 0; i < xSize; i++)
+        {
+            for (int j = 0; j < zSize; j++)
+            {
+                Destroy(board.ground[i].GetBlock(j));
+                Destroy(board.floor[i].GetBlock(j));
+                Destroy(board.objects[i].GetBlock(j));
+            }
+        }
     }
 
     public Board GetBoard()
@@ -71,7 +93,13 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private void CreateBlock(int i, int j, int id, BlockType blockType)
+    public void Reset(State state)
+    {
+        Clear();
+        Init(state);
+    }
+
+    private GameObject CreateBlock(int i, int j, int id, BlockType blockType)
     {
         GameObject prefab;
         if (prefabDictionary.TryGetValue(id, out prefab))
@@ -85,12 +113,23 @@ public class BoardManager : MonoBehaviour
                 GameObject instance = InitBlock(prefab, i, j, position, blockType);
                 board.SetInstance(blockType, instance, i, j);
 
+                // Player
                 if (id == 100)
                 {
                     InitCamera(instance);
                 }
+
+                // Teleporter
+                if (id >= 10 && id <= 17)
+                {
+                    TeleporterManager.current.AddTeleporter(instance);
+                }
+
+                return instance;
             }
         }
+
+        return null;
     }
 
     private float GetYOffset(BlockType blockType)
@@ -109,6 +148,13 @@ public class BoardManager : MonoBehaviour
             default:
                 return 0;
         }
+    }
+
+    private void Init(State state)
+    {
+        InitStateLevel(state.ground, BlockType.Ground);
+        InitStateLevel(state.floor, BlockType.Floor);
+        InitStateLevel(state.objects, BlockType.Object);
     }
 
     private void InitDictionary()
@@ -143,6 +189,26 @@ public class BoardManager : MonoBehaviour
                 {
                     int id = rows[i].row[j];
                     CreateBlock(i, j, id, blockType);
+                }
+            }
+        }
+    }
+
+    private void InitStateLevel((int, object)[,] blocks, BlockType blockType)
+    {
+        for (int i = 0; i < blocks.GetLength(0); i++)
+        {
+            for (int j = 0; j < blocks.GetLength(1); j++)
+            {
+                (int, object) blockState = blocks[i, j];
+                GameObject instance = CreateBlock(i, j, blockState.Item1, blockType);
+                if (instance != null)
+                {
+                    Block block = instance.GetComponent<Block>();
+                    if (block != null)
+                    {
+                        block.SetState(blockState.Item2);
+                    }
                 }
             }
         }

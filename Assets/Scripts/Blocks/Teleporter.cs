@@ -1,53 +1,23 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Teleporter : Block
 {
-    static Dictionary<int, List<GameObject>> instances = new Dictionary<int, List<GameObject>>();
-
-    public override void Start()
+    public override bool MoveEnd(GameObject gameObject, Action callback)
     {
-        base.Start();
+        GameObject nextTeleporter = TeleporterManager.current.GetTeleporter(this.gameObject); ;
+        Block teleporterBlock = nextTeleporter.GetComponent<Block>();
 
-        List<GameObject> teleporters;
-        if (!instances.TryGetValue(id, out teleporters))
+        if (teleporterBlock != null)
         {
-            teleporters = new List<GameObject>();
-        }
-        teleporters.Add(gameObject);
-        instances[id] = teleporters;
-    }
-
-    public override bool MoveOver(GameObject gameObject, Action callback)
-    {
-        List<GameObject> teleporters;
-        GameObject teleporter = this.gameObject;
-
-        if (instances.TryGetValue(id, out teleporters))
-        {
-            int index = teleporters.IndexOf(teleporter);
-            if (index != -1)
-            {
-                index += 1;
-                if (index == teleporters.Count)
-                {
-                    index = 0;
-                }
-
-                GameObject nextTeleporter = teleporters[index];
-                Block teleporterBlock = nextTeleporter.GetComponent<Block>();
-                if (teleporterBlock != null)
-                {
-                    Board board = boardManager.GetBoard();
-                    Vector2Int position = teleporterBlock.GetPosition();
-                    board.SetNewObjectPosition(gameObject, position.x, position.y);
-                    gameObject.transform.position += nextTeleporter.transform.position - teleporter.transform.position;
-                    callback();
-                }
-            }
+            Board board = BoardManager.current.GetBoard();
+            Vector2Int position = teleporterBlock.GetPosition();
+            board.SetNewObjectPosition(gameObject, position.x, position.y);
+            gameObject.transform.position += nextTeleporter.transform.position - this.gameObject.transform.position;
+            callback();
+            return false;
         }
 
-        return true;
+        return base.MoveEnd(gameObject, callback);
     }
 }

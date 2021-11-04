@@ -8,8 +8,8 @@ public class Shooter : MonoBehaviour
     public GameObject canon;
     public GameObject laserPrefab;
     public float speed = 10f;
+    public float laserHitDuration = 0.1f;
 
-    private BoardManager boardManager;
     private float canonYOffset;
     private Block hitBlock;
     private Direction? hitDirection;
@@ -18,15 +18,6 @@ public class Shooter : MonoBehaviour
     private Direction shootDirection;
     private Vector2Int shootPosition;
     private List<Vector3> trajectoryList;
-
-    public void Start()
-    {
-        GameObject boardManagerInstance = GameObject.FindWithTag("BoardManager");
-        if (boardManagerInstance != null)
-        {
-            boardManager = boardManagerInstance.GetComponent<BoardManager>();
-        }
-    }
 
     public void AddLaserPoint(Vector2 position, float speed, Action callback)
     {
@@ -41,7 +32,7 @@ public class Shooter : MonoBehaviour
 
     public void DestroyLaser()
     {
-        Destroy(laser, 0.1f);
+        Destroy(laser, laserHitDuration);
     }
 
     public bool IsShooting()
@@ -64,10 +55,10 @@ public class Shooter : MonoBehaviour
         shootDirection = direction;
         shootPosition = DirectionHelper.GetNextPosition(position, direction);
 
-        StartCoroutine(AnimateLine(() => EndShootCallback(callback)));
+        StartCoroutine(AnimateLine(callback));
     }
 
-    private IEnumerator AnimateLine(Action callback)
+    private IEnumerator AnimateLine(Action callback = null)
     {
         bool continueShooting = true;
         int i = 0;
@@ -95,7 +86,7 @@ public class Shooter : MonoBehaviour
             }
         }
 
-        EndShoot(callback);
+        ShootEnd(() => StartCoroutine(ShootEndCallback(callback)));
     }
 
     private IEnumerator AnimateLineSegment(LineRenderer line, int i, int pointsCount, Vector3 startPosition, Vector3 endPosition, float speed, Action callback = null)
@@ -112,11 +103,6 @@ public class Shooter : MonoBehaviour
             pos = Vector3.Lerp(startPosition, endPosition, t);
             line.SetPosition(i + 1, pos);
 
-            /*for (int j = i + 1; j < pointsCount; j++)
-            {
-                line.SetPosition(j, pos);
-            }*/
-
             yield return null;
         }
         line.SetPosition(i + 1, endPosition);
@@ -130,7 +116,7 @@ public class Shooter : MonoBehaviour
     private void CheckNextPosition(Vector2Int position, ref Direction direction, ref bool continueShooting)
     {
         Block objectBlock = null;
-        Board board = boardManager.GetBoard();
+        Board board = BoardManager.current.GetBoard();
 
         if (board.IsPositionInRange(position))
         {
@@ -150,7 +136,7 @@ public class Shooter : MonoBehaviour
 
             if (objectBlock == null)
             {
-                Vector3 trajectoryPosition = DirectionHelper.GetShootHitPosition(position, direction, canonYOffset, boardManager.tileSize);
+                Vector3 trajectoryPosition = DirectionHelper.GetShootHitPosition(position, direction, canonYOffset, BoardManager.current.tileSize);
                 trajectoryList.Add(trajectoryPosition);
             }
         }
@@ -170,17 +156,22 @@ public class Shooter : MonoBehaviour
         }
     }
 
-    private void EndShoot(Action callback)
+    private void ShootEnd(Action callback)
     {
-        if (hitBlock == null || !hitBlock.ShootThrough(gameObject, (Direction)hitDirection, this, callback))
+        if (hitBlock != null)
+        {
+            hitBlock.ShootThrough(gameObject, (Direction)hitDirection, this, callback);
+        }
+        else
         {
             DestroyLaser();
             callback();
         }
     }
 
-    private void EndShootCallback(Action callback = null)
+    private IEnumerator ShootEndCallback(Action callback = null)
     {
+        yield return new WaitForSeconds(laserHitDuration);
         isShooting = false;
         if (callback != null)
         {

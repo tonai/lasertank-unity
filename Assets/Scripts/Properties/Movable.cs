@@ -9,7 +9,6 @@ public class Movable : MonoBehaviour
     public float speed = 4f;
 
     private Block block;
-    private BoardManager boardManager;
     private bool isMoving = false;
     private Direction moveDirection;
     private Vector2Int startPosition;
@@ -17,12 +16,6 @@ public class Movable : MonoBehaviour
     public void Start()
     {
         block = GetComponent<Block>();
-
-        GameObject boardManagerInstance = GameObject.FindWithTag("BoardManager");
-        if (boardManagerInstance != null)
-        {
-            boardManager = boardManagerInstance.GetComponent<BoardManager>();
-        }
     }
 
     public Direction GetMoveDirection()
@@ -35,7 +28,7 @@ public class Movable : MonoBehaviour
         return isMoving;
     }
 
-    public void Move(Direction direction, Action callback = null)
+    public void Move(Direction direction, bool saveHistory = false, Action callback = null)
     {
         startPosition = block.GetPosition();
         moveDirection = direction;
@@ -43,10 +36,18 @@ public class Movable : MonoBehaviour
 
         if (CanMoveThroughObject(nextPosition.x, nextPosition.y))
         {
-            Board board = boardManager.GetBoard();
-            Vector2 worldPosition = new Vector2(nextPosition.x * boardManager.tileSize + block.xOffset, nextPosition.y * boardManager.tileSize + block.zOffset);
+            if (saveHistory)
+            {
+                HistoryManager.current.Push();
+            }
+
+            MoveStart(nextPosition.x, nextPosition.y);
+
+            float tileSize = BoardManager.current.tileSize;
+            Vector2 worldPosition = new Vector2(nextPosition.x * tileSize + block.xOffset, nextPosition.y * tileSize + block.zOffset);
+            Board board = BoardManager.current.GetBoard();
             board.SetNewObjectPosition(gameObject, nextPosition.x, nextPosition.y);
-            StartCoroutine(AnimateMove(worldPosition, () => EndMovementCallback(callback)));
+            StartCoroutine(AnimateMove(worldPosition, callback));
         }
         else if (callback != null)
         {
@@ -54,7 +55,7 @@ public class Movable : MonoBehaviour
         }
     }
 
-    private IEnumerator AnimateMove(Vector2 nextPosition, Action callback)
+    private IEnumerator AnimateMove(Vector2 nextPosition, Action callback = null)
     {
         isMoving = true;
         Vector3 startPosition = transform.position;
@@ -72,13 +73,34 @@ public class Movable : MonoBehaviour
             yield return null;
         }
 
+        float tileSize = BoardManager.current.tileSize;
         transform.position = endPosition;
-        _ = EndMovement((int)Math.Round((newPosition.x - block.xOffset) / boardManager.tileSize), (int)Math.Round((newPosition.z - block.zOffset) / boardManager.tileSize), callback);
+        _ = MoveEnd((int)Math.Round((newPosition.x - block.xOffset) / tileSize), (int)Math.Round((newPosition.z - block.zOffset) / tileSize), callback);
+    }
+
+    private bool CanMoveOverFloor(int x, int y)
+    {
+        Board board = BoardManager.current.GetBoard();
+        GameObject floorObject = board.GetFloorBlock(x, y);
+
+        if (floorObject != null)
+        {
+            Block floorBlock = floorObject.GetComponent<Block>();
+
+            if (floorBlock != null && floorBlock.CanMoveOver(gameObject))
+            {
+                return CanMoveOverGround(x, y);
+            }
+
+            return false;
+        }
+
+        return CanMoveOverGround(x, y);
     }
 
     private bool CanMoveOverGround(int x, int y)
     {
-        Board board = boardManager.GetBoard();
+        Board board = BoardManager.current.GetBoard();
         GameObject groundObject = board.GetGroundBlock(x, y);
 
         if (groundObject != null)
@@ -96,7 +118,7 @@ public class Movable : MonoBehaviour
 
     private bool CanMoveThroughObject(int x, int y)
     {
-        Board board = boardManager.GetBoard();
+        Board board = BoardManager.current.GetBoard();
         GameObject objectObject = board.GetObjectBlock(x, y);
 
         if (objectObject != null)
@@ -105,13 +127,13 @@ public class Movable : MonoBehaviour
 
             if (objectBlock != null && objectBlock.CanMoveThrough(gameObject))
             {
-                return CanMoveOverGround(x, y);
+                return CanMoveOverFloor(x, y);
             }
 
             return false;
         }
 
-        return CanMoveOverGround(x, y);
+        return CanMoveOverFloor(x, y);
     }
 
     private List<Task> CheckEnemies()
@@ -134,7 +156,7 @@ public class Movable : MonoBehaviour
 
     private Task CheckEnemiesInDirection(Direction direction, Vector2Int position)
     {
-        Board board = boardManager.GetBoard();
+        Board board = BoardManager.current.GetBoard();
         Vector2Int nextPosition = DirectionHelper.GetNextPosition(position, direction);
         if (!board.IsPositionInRange(nextPosition))
         {
@@ -168,54 +190,101 @@ public class Movable : MonoBehaviour
 
     }
 
-    private async Task EndMovement(int x, int z, Action callback)
+    private async Task MoveEnd(int x, int z, Action callback = null)
     {
-        Board board = boardManager.GetBoard();
+        Board board = BoardManager.current.GetBoard();
 
         GameObject startGround = board.GetGroundBlock(startPosition.x, startPosition.y);
         Block startGroundBlock = startGround.GetComponent<Block>();
         startGroundBlock.MoveOut();
 
         List<Task> tasks = new List<Task>();
-        if (this.block.id == 100)
+        if (block.id == 100)
         {
             tasks = CheckEnemies();
         }
 
-        bool checkGround = true;
-        TaskCompletionSource<bool> promise = new TaskCompletionSource<bool>();
+        bool checkNext = true;
+        TaskCompletionSource<bool> floorPromise = new TaskCompletionSource<bool>();
+        Action floorResolve = () => floorPromise.SetResult(true);
         GameObject endFloor = board.GetFloorBlock(x, z);
         if (endFloor != null)
         {
             Block endFloorBlock = endFloor.GetComponent<Block>();
-            if (endFloorBlock != null && endFloorBlock.MoveOver(gameObject, () => promise.SetResult(true)))
+            if (endFloorBlock != null)
             {
-                checkGround = false;
-            } 
-        }
-
-        if (checkGround)
-        {
-            GameObject endGround = board.GetGroundBlock(x, z);
-            Block endGroundBlock = endGround.GetComponent<Block>();
-            if (endGroundBlock == null || !endGroundBlock.MoveOver(gameObject, () => promise.SetResult(true)))
-            {
-                promise.SetResult(true);
+                checkNext = endFloorBlock.MoveEnd(gameObject, floorResolve);
+                tasks.Add(floorPromise.Task);
             }
         }
 
-        tasks.Add(promise.Task);
-        await Task.WhenAll(tasks);
-        callback();
+        if (checkNext)
+        {
+            TaskCompletionSource<bool> groundPromise = new TaskCompletionSource<bool>();
+            Action groundResolve = () => groundPromise.SetResult(true);
+            GameObject endGround = board.GetGroundBlock(x, z);
+            if (endGround != null)
+            {
+                Block endGroundBlock = endGround.GetComponent<Block>();
+                if (endGroundBlock != null)
+                {
+                    endGroundBlock.MoveEnd(gameObject, groundResolve);
+                    tasks.Add(groundPromise.Task);
+                }
+            }
+        }
 
+        await Task.WhenAll(tasks);
+        MoveEndCallback(callback);
     }
 
-    private void EndMovementCallback(Action callback = null)
+    private void MoveEndCallback(Action callback = null)
     {
         isMoving = false;
         if (callback != null)
         {
             callback();
+        }
+    }
+
+    private void MoveStart(int x, int z)
+    {
+        bool checkNext = true;
+        Board board = BoardManager.current.GetBoard();
+        GameObject startObject = board.GetObjectBlock(x, z);
+        if (startObject != null)
+        {
+            Block endObjectBlock = startObject.GetComponent<Block>();
+            if (endObjectBlock != null)
+            {
+                checkNext = endObjectBlock.MoveStart(gameObject);
+            }
+        }
+
+        if (checkNext)
+        {
+            GameObject endFloor = board.GetFloorBlock(x, z);
+            if (endFloor != null)
+            {
+                Block endFloorBlock = endFloor.GetComponent<Block>();
+                if (endFloorBlock != null)
+                {
+                    checkNext = endFloorBlock.MoveStart(gameObject);
+                }
+            }
+        }
+
+        if (checkNext)
+        {
+            GameObject endGround = board.GetGroundBlock(x, z);
+            if (endGround != null)
+            {
+                Block endGroundBlock = endGround.GetComponent<Block>();
+                if (endGroundBlock != null)
+                {
+                    endGroundBlock.MoveStart(gameObject);
+                }
+            }
         }
     }
 }

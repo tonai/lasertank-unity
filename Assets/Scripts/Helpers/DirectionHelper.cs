@@ -72,6 +72,27 @@ static public class DirectionHelper
         }
     }
 
+    static public float GetRotation(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.North:
+                return 0;
+
+            case Direction.South:
+                return 180;
+
+            case Direction.Est:
+                return 90;
+
+            case Direction.West:
+                return 270;
+
+            default:
+                return 0; // This should never happen
+        }
+    }
+
     static public float GetRotation(Direction direction, Direction targetDirection, float rotation)
     {
         if (direction == targetDirection)

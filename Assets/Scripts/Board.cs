@@ -21,7 +21,22 @@ public class Row
         }
         return null;
     }
-    
+
+    public (int, object) Serialize(int index)
+    {
+        GameObject block = GetBlock(index);
+        if (block != null)
+        {
+            Block blockBlock = block.GetComponent<Block>();
+            if (blockBlock != null)
+            {
+                return blockBlock.Serialize();
+            }
+        }
+
+        return (-1, null);
+    }
+
     public void SetInstance(GameObject block, int index)
     {
         if (blocks == null)

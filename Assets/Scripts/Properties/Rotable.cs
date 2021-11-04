@@ -19,13 +19,16 @@ public class Rotable : MonoBehaviour
         return isRotating;
     }
 
-    public void Rotate(float rotation, Action callback = null)
+    public void Rotate(float rotation, bool saveHistory = false, Action callback = null)
     {
+        if (saveHistory) {
+            HistoryManager.current.Push();
+        }
         float nextRotation = (float)Math.Round(transform.rotation.eulerAngles.y) + rotation;
-        StartCoroutine(AnimateRotation(nextRotation, () => EndRotationCallback(callback)));
+        StartCoroutine(AnimateRotation(nextRotation, callback));
     }
 
-    private IEnumerator AnimateRotation(float nextRotation, Action callback)
+    private IEnumerator AnimateRotation(float nextRotation, Action callback = null)
     {
         isRotating = true;
         float startPosition = transform.rotation.eulerAngles.y;
@@ -44,19 +47,20 @@ public class Rotable : MonoBehaviour
         }
 
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, endPosition, transform.rotation.eulerAngles.z);
-        EndRotation(DirectionHelper.GetDirection(nextRotation - block.rotationOffset), callback);
+        RotateEnd(DirectionHelper.GetDirection(nextRotation - block.rotationOffset), callback);
     }
 
-    private void EndRotation(Direction newDirection, Action callback)
+    private void RotateEnd(Direction newDirection, Action callback = null)
     {
         block.direction = newDirection;
-        callback();
+        RotateEndCallback(callback);
     }
 
-    private void EndRotationCallback(Action callback = null)
+    private void RotateEndCallback(Action callback = null)
     {
         isRotating = false;
-        if (callback != null) {
+        if (callback != null)
+        {
             callback();
         }
     }

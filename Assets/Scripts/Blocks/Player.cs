@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : Block
@@ -15,9 +16,9 @@ public class Player : Block
     private Rotable rotable;
     private Shooter shooter;
 
-    public override void Start()
+    public override void Awake()
     {
-        base.Start();
+        base.Awake();
         block = GetComponent<Block>();
         movable = GetComponent<Movable>();
         rotable = GetComponent<Rotable>();
@@ -72,13 +73,48 @@ public class Player : Block
     public override Vector3 GetShootHitPosition(float yOffset, ref Direction direction, ref bool continueShooting)
     {
         continueShooting = false;
-        return new Vector3(position.x * boardManager.tileSize, yOffset, position.y * boardManager.tileSize);
+        float tileSize = BoardManager.current.tileSize;
+        return new Vector3(position.x * tileSize, yOffset, position.y * tileSize);
     }
 
-    public override bool ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
+    public override (int, object) Serialize()
     {
+        Dictionary<string, object> data = new Dictionary<string, object>();
+        data.Add("Direction", direction);
+
+        Opener opener = GetComponent<Opener>();
+        if (opener != null)
+        {
+            data.Add("Opener", opener.Serialize());
+        }
+        
+        return (id, data);
+    }
+
+    public override void SetState(object state) {
+        Dictionary<string, object> data = (Dictionary<string, object>)state;
+
+        if (data["Direction"] != null)
+        {
+            direction = (Direction)data["Direction"];
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, DirectionHelper.GetRotation(direction) + rotationOffset, transform.rotation.eulerAngles.z);
+        }
+
+        Opener opener = GetComponent<Opener>();
+        if (opener != null && data["Opener"] != null)
+        {
+            opener.SetState((int[])data["Opener"]);
+        }
+    }
+
+    public override void ShootThrough(GameObject gameObject, Direction direction, Shooter shooter, Action callback)
+    {
+        Block block = gameObject.GetComponent<Block>();
+        if (block != null && block.id == 100) {
+            HistoryManager.current.Push();
+        }
+        shooter.DestroyLaser();
         Debug.Log("Game over");
-        return true;
     }
 
     private void HandleRelativeMovement(Direction targetDirection)
@@ -88,19 +124,19 @@ public class Player : Block
         switch (targetDirection)
         {
             case Direction.North:
-                movable.Move(direction);
+                movable.Move(direction, true);
                 break;
 
             case Direction.South:
-                movable.Move(DirectionHelper.GetOppositeDirection(direction));
+                movable.Move(DirectionHelper.GetOppositeDirection(direction), true);
                 break;
 
             case Direction.Est:
-                rotable.Rotate(90f);
+                rotable.Rotate(90f, true);
                 break;
 
             case Direction.West:
-                rotable.Rotate(-90f);
+                rotable.Rotate(-90f, true);
                 break;
 
         }
@@ -112,11 +148,11 @@ public class Player : Block
 
         if (direction == targetDirection)
         {
-            movable.Move(direction);
+            movable.Move(direction, true);
         }
         else
         {
-            rotable.Rotate(DirectionHelper.GetRotation(direction, targetDirection, transform.rotation.eulerAngles.y));
+            rotable.Rotate(DirectionHelper.GetRotation(direction, targetDirection, transform.rotation.eulerAngles.y), true);
         }
     }
 }
